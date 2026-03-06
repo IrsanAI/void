@@ -93,13 +93,13 @@ c "  [5/5] Alias & Home-Screen Widget einrichten..."
 ALIAS_LINE="alias void='python3 $INSTALL_DIR/game/void_launcher.py'"
 
 # Alias in alle Shell-Configs schreiben
-ALIAS_ADDED=false
-for RC in "$HOME/.bashrc" "$HOME/.bash_profile" "$PREFIX/etc/bash.bashrc"; do
-  if [ -f "$RC" ] && ! grep -q "alias void=" "$RC" 2>/dev/null; then
-    echo "" >> "$RC"
-    echo "# VOID Game — IrsanAI" >> "$RC"
-    echo "$ALIAS_LINE" >> "$RC"
-    ALIAS_ADDED=true
+for RC in "$HOME/.bashrc" "$HOME/.bash_profile"; do
+  if [ -f "$RC" ]; then
+    if ! grep -q "alias void=" "$RC" 2>/dev/null; then
+      echo "" >> "$RC"
+      echo "# VOID Game — IrsanAI" >> "$RC"
+      echo "$ALIAS_LINE" >> "$RC"
+    fi
   fi
 done
 
@@ -107,7 +107,6 @@ done
 if [ ! -f "$HOME/.bashrc" ]; then
   echo "# VOID Game — IrsanAI" > "$HOME/.bashrc"
   echo "$ALIAS_LINE" >> "$HOME/.bashrc"
-  ALIAS_ADDED=true
 fi
 
 # Sofort in aktuelle Session laden
@@ -157,17 +156,14 @@ echo ""
 
 # ── Direkt starten? ─────────────────────────────────────────────
 echo -n "  Jetzt spielen? [J/n] "
-read choice
-case "$choice" in
-  [nN]*)
+read -r choice
+if [[ "$choice" =~ ^[nN] ]]; then
     echo ""
     gray "  ┌──────────────────────────────────────┐"
     echo -e "  │  ${BOLD}${CYAN}void${RESET}  ← einfach tippen & Enter      │"
     gray "  └──────────────────────────────────────┘"
     echo ""
-    ;;
-  *)
+else
     echo ""
-    exec python3 "$INSTALL_DIR/game/void_launcher.py"
-    ;;
-esac
+    python3 "$INSTALL_DIR/game/void_launcher.py"
+fi
