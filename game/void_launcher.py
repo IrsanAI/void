@@ -3,9 +3,23 @@
 VOID — Launcher
 Wähle: Solo / Multiplayer Client / Server starten
 """
-import sys, os, tty, termios, subprocess
+import sys, os
+
+IS_WINDOWS = os.name == "nt"
+
+if IS_WINDOWS:
+    import msvcrt
+else:
+    import tty
+    import termios
 
 def getch():
+    if IS_WINDOWS:
+        ch = msvcrt.getch()
+        try:
+            return ch.decode("utf-8", errors="ignore").lower()
+        except Exception:
+            return ""
     fd = sys.stdin.fileno()
     old = termios.tcgetattr(fd)
     try:
@@ -33,6 +47,9 @@ BANNER = gray("""
     ╚═══╝   ╚═════╝ ╚═╝╚═════╝""")
 
 def main():
+    if IS_WINDOWS:
+        os.system("")  # Aktiviert ANSI-Sequenzen in moderner Windows-Konsole
+
     clear()
     print(b(BANNER))
     print()
@@ -50,7 +67,8 @@ def main():
 
     if ch == '1':
         clear()
-        os.execv(sys.executable, [sys.executable, os.path.join(BASE, "void_solo.py")])
+        solo_target = "void_solo_enhanced.py" if os.path.exists(os.path.join(BASE, "void_solo_enhanced.py")) else "void_solo.py"
+        os.execv(sys.executable, [sys.executable, os.path.join(BASE, solo_target)])
 
     elif ch == '2':
         clear()
