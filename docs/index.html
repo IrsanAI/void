@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>VOID — IrsanAI Game</title>
-  <meta name="description" content="Das erste psychologische Multiplayer-Terminal-Game für Termux. Solo oder gegen Freunde." />
+  <meta name="description" content="Das erste psychologische Multiplayer-Terminal-Game für Android & iOS. Solo oder gegen Freunde." />
   <meta property="og:title" content="VOID — IrsanAI Terminal Game" />
-  <meta property="og:description" content="Psychologisches Survival. Du gegen die VOID. Läuft auf jedem Android in Termux." />
+  <meta property="og:description" content="Psychologisches Survival. Du gegen die VOID. Läuft auf Android (Termux) und iOS (a-Shell)." />
   <meta property="og:type" content="website" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -162,7 +162,7 @@
       font-weight: 400;
     }
 
-    /* ── Install Box (the main CTA) ── */
+    /* ── Install Box ── */
     .install-box {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -234,6 +234,34 @@
     .copy-btn.copied { background: var(--green); color: #0a0a0c; }
 
     .copy-icon { font-size: 16px; }
+
+    /* ── Tabs ── */
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .tab-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-family: var(--sans);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      transition: all 0.2s;
+    }
+    .tab-btn.active {
+      background: var(--red-dim);
+      color: #fff;
+      border-color: var(--red);
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
 
     /* ── Step guide ── */
     .steps {
@@ -319,42 +347,6 @@
       line-height: 1.55;
     }
 
-    /* ── Psy table ── */
-    .psy-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-top: 24px;
-    }
-
-    .psy-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-left: 3px solid var(--red-dim);
-      border-radius: 4px;
-      padding: 16px 14px;
-    }
-
-    .psy-card.green { border-left-color: #2a6640; }
-    .psy-card.yellow{ border-left-color: #6a5520; }
-    .psy-card.blue  { border-left-color: #1e4a6a; }
-
-    .psy-label {
-      font-family: var(--mono);
-      font-size: 10px;
-      color: var(--muted);
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      margin-bottom: 6px;
-    }
-
-    .psy-text {
-      font-family: var(--sans);
-      font-size: 14px;
-      color: var(--text);
-      line-height: 1.5;
-    }
-
     /* ── Terminal preview ── */
     .terminal {
       background: #080809;
@@ -401,29 +393,6 @@
     .term-body .w { color: #c8c8d4; }
     .term-body .d { color: #3a3a48; }
 
-    /* ── Requirements ── */
-    .req-list {
-      margin-top: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .req-item {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      font-family: var(--sans);
-      font-size: 15px;
-      color: var(--text);
-    }
-
-    .req-check {
-      color: var(--green);
-      font-family: var(--mono);
-      font-size: 14px;
-    }
-
     /* ── Footer ── */
     footer {
       border-top: 1px solid var(--border);
@@ -443,12 +412,7 @@
       text-decoration: none;
     }
 
-    /* ── Mobile ── */
-    @media (max-width: 520px) {
-      .psy-grid { grid-template-columns: 1fr; }
-      header { padding: 50px 0 40px; }
-    }
-    /* ── Mute Button (fixed top-right) ── */
+    /* ── Mute Button ── */
     .mute-btn {
       position: fixed;
       top: 16px;
@@ -468,24 +432,12 @@
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
       -webkit-tap-highlight-color: transparent;
-      opacity: 0;
-      pointer-events: none;
-    }
-    .mute-btn.visible {
-      opacity: 1;
-      pointer-events: all;
     }
     .mute-btn:hover {
       border-color: var(--red);
       box-shadow: 0 0 14px rgba(224,85,85,0.2);
     }
-    .mute-btn.muted {
-      border-color: var(--dim);
-      opacity: 0.45;
-    }
-    .mute-btn.muted:hover { opacity: 1; }
 
-    /* ── Autoplay hint ── */
     .sound-hint {
       font-family: var(--mono);
       font-size: 10px;
@@ -493,15 +445,12 @@
       letter-spacing: 0.15em;
       margin-top: 14px;
       opacity: 0.6;
-      animation: fadein 2s ease 1.5s both;
     }
-    @keyframes fadein { from { opacity:0 } to { opacity:0.6 } }
 
   </style>
 </head>
 <body>
 
-<!-- ── HERO ───────────────────────────────────────────────────── -->
 <header>
   <div class="container">
     <pre class="ascii-logo">██╗   ██╗ ██████╗ ██╗██████╗
@@ -510,114 +459,81 @@
  ╚████╔╝ ╚██████╔╝██║██████╔╝
   ╚═══╝   ╚═════╝ ╚═╝╚═════╝</pre>
     <p class="tagline">Psychologisches Survival<span class="cursor"></span></p>
-    <p class="sub-tagline">IrsanAI · Terminal Game · Termux · Android</p>
+    <p class="sub-tagline">IrsanAI · Terminal Game · Android & iOS</p>
     <p class="sound-hint">// berühre die seite — die void erwacht</p>
   </div>
 </header>
 
-<!-- Fixed Mute Button -->
-<button class="mute-btn" id="mute-btn" onclick="toggleMute()" title="Sound ein/aus">🔊</button>
+<button class="mute-btn" id="mute-btn" onclick="toggleMute()">🔊</button>
 
-<!-- ── INSTALL ────────────────────────────────────────────────── -->
 <section id="install">
   <div class="container">
     <p class="section-label">// installation</p>
-    <h2>In einer Zeile installieren</h2>
-    <p>Öffne <strong style="color:var(--cyan)">Termux</strong> auf deinem Android-Gerät und führe diesen Befehl aus.</p>
-
-    <div class="install-box">
-      <p class="install-label">// Termux — einfügen &amp; Enter drücken</p>
-      <div class="install-cmd" id="install-cmd">
-        <span class="prompt">$ </span><span class="cmd">curl</span> -fsSL <span class="url">https://raw.githubusercontent.com/IrsanAI/void/master/install/install.sh</span> | bash
-      </div>
-      <button class="copy-btn" id="copy-btn" onclick="copyCmd()">
-        <span class="copy-icon">⎘</span>
-        <span id="copy-label">Befehl kopieren</span>
-      </button>
+    <h2>Wähle dein System</h2>
+    
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab('android')">Android</button>
+      <button class="tab-btn" onclick="showTab('ios')">Apple iOS</button>
     </div>
 
-    <div class="section-label" style="margin-top:36px;">// schritt für schritt</div>
-    <div class="steps">
-      <div class="step">
-        <div class="step-num"></div>
-        <p class="step-text">
-          <strong>Termux installieren</strong> — kostenlos im
-          <a href="https://f-droid.org/en/packages/com.termux/" target="_blank" rel="noopener" style="color:var(--cyan)">F-Droid Store</a>
-          oder
-          <a href="https://play.google.com/store/apps/details?id=com.termux" target="_blank" rel="noopener" style="color:var(--cyan)">Google Play</a>.
-        </p>
+    <!-- Android Tab -->
+    <div id="android" class="tab-content active">
+      <p>Öffne <strong style="color:var(--cyan)">Termux</strong> auf deinem Android-Gerät.</p>
+      <div class="install-box">
+        <p class="install-label">// Termux — einfügen &amp; Enter drücken</p>
+        <div class="install-cmd" id="android-cmd">
+          <span class="prompt">$ </span><span class="cmd">curl</span> -fsSL <span class="url">https://raw.githubusercontent.com/IrsanAI/void/master/install/install.sh</span> | bash
+        </div>
+        <button class="copy-btn" onclick="copyCmd('android-cmd')">
+          <span class="copy-icon">⎘</span>
+          <span>Befehl kopieren</span>
+        </button>
       </div>
-      <div class="step">
-        <div class="step-num"></div>
-        <p class="step-text"><strong>Termux öffnen</strong> und den kopierten Befehl einfügen. Mit <strong>Enter</strong> bestätigen.</p>
-      </div>
-      <div class="step">
-        <div class="step-num"></div>
-        <p class="step-text">Das Installer-Script läuft automatisch: <strong>Python &amp; git</strong> werden bei Bedarf installiert, das Repo wird geklont, ein <strong>Alias <code style="color:var(--cyan)">void</code></strong> wird angelegt.</p>
-      </div>
-      <div class="step">
-        <div class="step-num"></div>
-        <p class="step-text">Nach der Installation direkt spielen — oder später mit <strong><code style="color:var(--green)">void</code></strong> starten.</p>
+      <div class="steps">
+        <div class="step"><div class="step-num"></div><p class="step-text"><strong>Termux installieren</strong> (F-Droid oder Play Store).</p></div>
+        <div class="step"><div class="step-num"></div><p class="step-text">Befehl einfügen und mit <strong>Enter</strong> bestätigen.</p></div>
       </div>
     </div>
-    <!-- Alias highlight box -->
+
+    <!-- iOS Tab -->
+    <div id="ios" class="tab-content">
+      <p>Öffne <strong style="color:var(--cyan)">a-Shell</strong> oder <strong style="color:var(--cyan)">iSH</strong> auf deinem iPhone/iPad.</p>
+      <div class="install-box">
+        <p class="install-label">// iOS Terminal — einfügen &amp; Enter drücken</p>
+        <div class="install-cmd" id="ios-cmd">
+          <span class="prompt">$ </span><span class="cmd">curl</span> -fsSL <span class="url">https://raw.githubusercontent.com/IrsanAI/void/master/install/install_ios.sh</span> | sh
+        </div>
+        <button class="copy-btn" onclick="copyCmd('ios-cmd')">
+          <span class="copy-icon">⎘</span>
+          <span>Befehl kopieren</span>
+        </button>
+      </div>
+      <div class="steps">
+        <div class="step"><div class="step-num"></div><p class="step-text"><strong>a-Shell</strong> oder <strong>iSH</strong> aus dem App Store laden.</p></div>
+        <div class="step"><div class="step-num"></div><p class="step-text">Befehl einfügen und mit <strong>Enter</strong> bestätigen.</p></div>
+      </div>
+    </div>
+
     <div class="install-box" style="margin-top: 36px;">
       <p class="install-label">// nach der installation — einfach tippen</p>
-      <div class="install-cmd" id="alias-cmd">
-        <span class="prompt">$ </span><span class="cmd" style="color:var(--green); font-size: 1.3em; letter-spacing: 0.08em;">void</span>
+      <div class="install-cmd">
+        <span class="prompt">$ </span><span class="cmd" style="color:var(--green); font-size: 1.3em;">void</span>
       </div>
-      <button class="copy-btn" onclick="copyAlias()" id="alias-btn" style="background: var(--cyan); margin-top:14px;">
-        <span>⎘</span>
-        <span id="alias-label">Alias kopieren</span>
-      </button>
       <p style="font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:12px;">
-        Der Installer richtet den Befehl <code style="color:var(--green)">void</code> automatisch ein. Ab dem ersten Neustart von Termux reicht ein Wort.
+        Der Befehl <code style="color:var(--green)">void</code> startet das Spiel sofort.
       </p>
     </div>
-
-    <!-- Widget section -->
-    <div class="section-label" style="margin-top:44px;">// home-screen widget</div>
-    <h2 style="margin-bottom:10px;">VOID auf dem Home-Screen</h2>
-    <p>Mit <strong style="color:var(--cyan)">Termux:Widget</strong> kannst du VOID direkt vom Android Home-Screen starten — ohne Termux manuell zu öffnen.</p>
-
-    <div class="steps" style="margin-top:22px;">
-      <div class="step">
-        <div class="step-num"></div>
-        <p class="step-text">
-          <strong>Termux:Widget installieren</strong> —
-          <a href="https://f-droid.org/packages/com.termux.widget" target="_blank" rel="noopener" style="color:var(--cyan)">F-Droid</a>
-          (kostenlos, kein Account nötig).
-        </p>
-      </div>
-      <div class="step">
-        <div class="step-num"></div>
-        <p class="step-text"><strong>Widget auf Home-Screen legen</strong> — Langer Druck auf den Home-Screen → Widgets → Termux:Widget → auf freie Fläche ziehen.</p>
-      </div>
-      <div class="step">
-        <div class="step-num"></div>
-        <p class="step-text"><strong>„VOID" auswählen</strong> — Der Installer hat den Shortcut automatisch angelegt. Einmal antippen → VOID startet sofort.</p>
-      </div>
-    </div>
-
-    <div style="background:var(--surface); border:1px solid var(--border); border-left: 3px solid var(--red); border-radius:5px; padding:16px 18px; margin-top:20px; font-family:var(--mono); font-size:12px; color:var(--muted);">
-      Der Shortcut-Script liegt automatisch in <code style="color:var(--cyan)">~/.shortcuts/VOID</code> und wird vom Installer erstellt. Termux:Widget liest genau diesen Ordner aus.
-    </div>
-
   </div>
 </section>
 
-<!-- ── TERMINAL PREVIEW ───────────────────────────────────────── -->
 <section>
   <div class="container">
     <p class="section-label">// terminal preview</p>
     <h2>So sieht es aus</h2>
-
     <div class="terminal">
       <div class="term-bar">
-        <div class="dot r"></div>
-        <div class="dot y"></div>
-        <div class="dot g"></div>
-        <span class="term-title">Termux — VOID Solo</span>
+        <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+        <span class="term-title">VOID Solo — Enhanced Edition</span>
       </div>
       <div class="term-body"><pre>
  <span class="d">╔══ VOID SOLO ════════════════════════════╗</span>
@@ -625,584 +541,55 @@
   <span class="c">⚡ ENERGIE</span> <span class="g">██████</span><span class="d">░░░░</span> 64   <span class="c">◈ 90</span> Punkte
   <span class="r">VOID ▶</span> <span class="d">Deine letzte Bewegung war... vorhersehbar.</span>
  <span class="d">╚═════════════════════════════════════════╝</span>
-
-  <span class="d">┌────────────────────────────┐</span>
-  <span class="d">│</span><span class="d">· · · · · · · · · · · · </span><span class="d">│</span>
-  <span class="d">│</span><span class="d">· · · </span><span class="y">◈</span><span class="d"> · · · · · · · · </span><span class="d">│</span>
-  <span class="d">│</span><span class="d">· · · · · </span><span class="g">◉</span><span class="d"> · · · · · · </span><span class="d">│</span>
-  <span class="d">│</span><span class="d">· · · · · · · </span><span class="c">○</span><span class="d"> · · · · </span><span class="d">│</span>
-  <span class="d">│</span><span class="d">· · · · · · · · · · </span><span class="r">▓</span><span class="d"> · </span><span class="d">│</span>
-  <span class="d">│</span><span class="d">· · · · · · · · · · · · </span><span class="d">│</span>
-  <span class="d">└────────────────────────────┘</span>
-  <span class="g">◉</span> Du  <span class="c">○</span> Bot  <span class="y">◈</span> Signal  <span class="r">▓</span> VOID
-
-  <span class="d">── LOG ──────────────────────────────────</span>
-  <span class="d">22:14:09</span> <span class="r">VOID: Ich lerne. Jede Sekunde.</span>
-  <span class="d">22:14:17</span> <span class="y">⚠ VOID-POSITION KURZ SICHTBAR!</span>
-  <span class="d">22:14:22</span> <span class="g">⚡ Signal absorbiert! +30 | Score: 90</span>
-
-  <span class="d">── STEUERUNG ───────────────────────────</span>
-  <span class="w">WASD</span> Bewegen  <span class="w">E</span> Scan  <span class="w">R</span> Rasten  <span class="w">Q</span> Quit</pre>
-      </div>
+      </pre></div>
     </div>
   </div>
 </section>
 
-<!-- ── FEATURES ───────────────────────────────────────────────── -->
 <section>
   <div class="container">
-    <p class="section-label">// was VOID einzigartig macht</p>
-    <h2>Psychologie statt Grafik</h2>
-
+    <p class="section-label">// features</p>
     <div class="features">
-      <div class="feat">
-        <span class="feat-icon">🧠</span>
-        <p class="feat-title">Lernende VOID-KI</p>
-        <p class="feat-desc">Die KI analysiert deine Bewegungsmuster in Echtzeit und wird jede Runde gezielter.</p>
-      </div>
-      <div class="feat">
-        <span class="feat-icon">👤</span>
-        <p class="feat-title">Solo + Multiplayer</p>
-        <p class="feat-desc">Allein gegen KI-Bots oder im WLAN mit Freunden — 2–6 Spieler.</p>
-      </div>
-      <div class="feat">
-        <span class="feat-icon">📡</span>
-        <p class="feat-title">Asymmetrisch</p>
-        <p class="feat-desc">Kein Spieler ist die VOID. Sie ist eine eigenständige KI mit steigender Aggression.</p>
-      </div>
-      <div class="feat">
-        <span class="feat-icon">📱</span>
-        <p class="feat-title">Nur Termux nötig</p>
-        <p class="feat-desc">Kein Store, kein APK, keine Permissions. Läuft auf jedem Android-Gerät.</p>
-      </div>
-      <div class="feat">
-        <span class="feat-icon">💾</span>
-        <p class="feat-title">Highscore-System</p>
-        <p class="feat-desc">Lokale Bestenliste. 3 Schwierigkeitsgrade. Wird zwischen Sessions gespeichert.</p>
-      </div>
-      <div class="feat">
-        <span class="feat-icon">🔓</span>
-        <p class="feat-title">Open Source</p>
-        <p class="feat-desc">Vollständig offen auf GitHub. Modifiziere, forke, erweitere.</p>
-      </div>
+      <div class="feat"><span class="feat-icon">🧠</span><p class="feat-title">Lernende KI</p><p class="feat-desc">Die VOID analysiert deine Muster in Echtzeit.</p></div>
+      <div class="feat"><span class="feat-icon">🔊</span><p class="feat-title">Immersiver Sound</p><p class="feat-desc">Dynamische Soundscapes und Stereo-Simulation.</p></div>
+      <div class="feat"><span class="feat-icon">🍎</span><p class="feat-title">iOS Support</p><p class="feat-desc">Jetzt voll kompatibel mit Apple-Geräten.</p></div>
     </div>
   </div>
 </section>
 
-<!-- ── PSYCHOLOGIE ────────────────────────────────────────────── -->
-<section>
-  <div class="container">
-    <p class="section-label">// psychologische mechaniken</p>
-    <h2>Drei Emotionen. Ein Spiel.</h2>
-    <p>VOID ist kein Zufall-Game. Jede Mechanik ist auf eine spezifische psychologische Wirkung ausgelegt.</p>
-
-    <div class="psy-grid">
-      <div class="psy-card">
-        <p class="psy-label">Paranoia</p>
-        <p class="psy-text">Du weißt nie wo die VOID ist. Scans verraten sie kurz — aber enthüllen auch dich.</p>
-      </div>
-      <div class="psy-card green">
-        <p class="psy-label">Soziale Bindung</p>
-        <p class="psy-text">Notsignal senden hilft dem Team — aber gibt deine Position preis. Vertrauen kostet.</p>
-      </div>
-      <div class="psy-card yellow">
-        <p class="psy-label">Rivalität</p>
-        <p class="psy-text">Signale erhöhen deinen Score. Die VOID kommentiert, wer führt — und jagt den Besten.</p>
-      </div>
-      <div class="psy-card blue">
-        <p class="psy-label">Eskalation</p>
-        <p class="psy-text">Je länger du überlebst, desto aggressiver wird die VOID. Kein komfortables Endspiel.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ── REQUIREMENTS ───────────────────────────────────────────── -->
-<section>
-  <div class="container">
-    <p class="section-label">// voraussetzungen</p>
-    <h2>Was du brauchst</h2>
-
-    <div class="req-list">
-      <div class="req-item">
-        <span class="req-check">✓</span>
-        <span>Android-Smartphone oder -Tablet</span>
-      </div>
-      <div class="req-item">
-        <span class="req-check">✓</span>
-        <span><strong style="color:var(--cyan)">Termux</strong> installiert (F-Droid oder Play Store — kostenlos)</span>
-      </div>
-      <div class="req-item">
-        <span class="req-check">✓</span>
-        <span>Internetverbindung für die Installation (~2 MB)</span>
-      </div>
-      <div class="req-item" style="color:var(--muted)">
-        <span style="color:var(--muted)">✗</span>
-        <span>Keine Root-Rechte nötig</span>
-      </div>
-      <div class="req-item" style="color:var(--muted)">
-        <span style="color:var(--muted)">✗</span>
-        <span>Keine externen Python-Pakete</span>
-      </div>
-      <div class="req-item" style="color:var(--muted)">
-        <span style="color:var(--muted)">✗</span>
-        <span>Kein App Store Account</span>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ── CTA REPEAT ─────────────────────────────────────────────── -->
-<section style="text-align:center; padding: 60px 0;">
-  <div class="container">
-    <p class="section-label" style="text-align:center;">// jetzt spielen</p>
-    <h2 style="margin-bottom:8px;">Die VOID wartet bereits.</h2>
-    <p style="margin-bottom:28px;">Öffne Termux. Kopiere. Enter.</p>
-    <div class="install-box" style="text-align:left; max-width:600px; margin:0 auto 24px;">
-      <div class="install-cmd" id="install-cmd-2">
-        <span class="prompt">$ </span><span class="cmd">curl</span> -fsSL <span class="url">https://raw.githubusercontent.com/IrsanAI/void/master/install/install.sh</span> | bash
-      </div>
-    </div>
-    <button class="copy-btn" id="copy-btn-2" onclick="copyCmd2()" style="margin:0 auto;">
-      <span class="copy-icon">⎘</span>
-      <span id="copy-label-2">Befehl kopieren</span>
-    </button>
-  </div>
-</section>
-
-<!-- ── FOOTER ─────────────────────────────────────────────────── -->
 <footer>
   <div class="container">
-    <p>
-      <a href="https://github.com/IrsanAI/void" target="_blank" rel="noopener">github.com/IrsanAI/void</a>
-      &nbsp;·&nbsp;
-      IrsanAI · VOID v1.0
-      &nbsp;·&nbsp;
-      <a href="https://github.com/IrsanAI" target="_blank" rel="noopener">@IrsanAI</a>
-    </p>
+    <p>Entwickelt von <a href="https://github.com/IrsanAI">IrsanAI</a> · MIT Lizenz</p>
   </div>
 </footer>
 
 <script>
-  // ═══════════════════════════════════════════════════════
-  //  VOID — Procedural Audio Engine
-  //  Pure Web Audio API. No files. No downloads.
-  //  Dark atmospheric heartbeat that accelerates.
-  // ═══════════════════════════════════════════════════════
-
-  let audioCtx = null;
-  let audioPlaying = false;
-  let audioNodes = [];    // track all nodes for cleanup
-  let bpmInterval = null;
-  let currentBPM = 42;
-  let voidDroneGain = null;
-  let heartbeatGain = null;
-  let tensionGain = null;
-  let pulseGain = null;
-
-  // ── Utility ──────────────────────────────────────────────
-  function ac() {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    return audioCtx;
+  function showTab(id) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    event.currentTarget.classList.add('active');
   }
 
-  function ramp(param, target, duration) {
-    param.linearRampToValueAtTime(target, ac().currentTime + duration);
-  }
-
-  // ── Master Compressor (Pseudo-3D warmth) ─────────────────
-  function getMaster() {
-    if (!getMaster._node) {
-      const comp = ac().createDynamicsCompressor();
-      comp.threshold.value = -18;
-      comp.knee.value = 12;
-      comp.ratio.value = 6;
-      comp.attack.value = 0.004;
-      comp.release.value = 0.25;
-
-      // Subtle reverb via convolver
-      const conv = ac().createConvolver();
-      const len = ac().sampleRate * 3.5;
-      const ir = ac().createBuffer(2, len, ac().sampleRate);
-      for (let c = 0; c < 2; c++) {
-        const d = ir.getChannelData(c);
-        for (let i = 0; i < len; i++) {
-          d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.2);
-        }
-      }
-      conv.buffer = ir;
-
-      const convGain = ac().createGain();
-      convGain.gain.value = 0.28;
-      const dryGain = ac().createGain();
-      dryGain.gain.value = 0.78;
-
-      comp.connect(dryGain);
-      dryGain.connect(ac().destination);
-      comp.connect(conv);
-      conv.connect(convGain);
-      convGain.connect(ac().destination);
-
-      getMaster._node = comp;
-    }
-    return getMaster._node;
-  }
-
-  // ── 1. VOID DRONE — deep sub-bass rumble ─────────────────
-  function startDrone() {
-    const ctx = ac();
-    const master = getMaster();
-
-    // Sub oscillator
-    const sub = ctx.createOscillator();
-    sub.type = 'sine';
-    sub.frequency.value = 28;
-
-    // Second detuned layer for beating effect
-    const sub2 = ctx.createOscillator();
-    sub2.type = 'sine';
-    sub2.frequency.value = 30.3;
-
-    // Texture layer
-    const tex = ctx.createOscillator();
-    tex.type = 'triangle';
-    tex.frequency.value = 56.2;
-
-    voidDroneGain = ctx.createGain();
-    voidDroneGain.gain.value = 0;
-
-    const texGain = ctx.createGain();
-    texGain.gain.value = 0.18;
-
-    // Slow LFO on drone pitch — breathing
-    const lfo = ctx.createOscillator();
-    lfo.frequency.value = 0.07;
-    const lfoGain = ctx.createGain();
-    lfoGain.gain.value = 1.4;
-    lfo.connect(lfoGain);
-    lfoGain.connect(sub.frequency);
-    lfoGain.connect(sub2.frequency);
-    lfo.start();
-
-    sub.connect(voidDroneGain);
-    sub2.connect(voidDroneGain);
-    tex.connect(texGain);
-    texGain.connect(voidDroneGain);
-    voidDroneGain.connect(master);
-
-    sub.start();
-    sub2.start();
-    tex.start();
-
-    // Fade in
-    voidDroneGain.gain.setTargetAtTime(0.55, ctx.currentTime, 2.5);
-
-    audioNodes.push(sub, sub2, tex, lfo);
-  }
-
-  // ── 2. HEARTBEAT — the iconic motif ──────────────────────
-  function triggerHeartbeat(bpm) {
-    const ctx = ac();
-    const master = getMaster();
-    const now = ctx.currentTime;
-
-    // Double-beat: lub-dub
-    [[0, 90, 0.13], [0.13, 55, 0.08]].forEach(([offset, freq, dur]) => {
-      const osc = ctx.createOscillator();
-      osc.type = 'sine';
-      osc.frequency.value = freq;
-
-      const env = ctx.createGain();
-      env.gain.setValueAtTime(0, now + offset);
-      env.gain.linearRampToValueAtTime(0.9, now + offset + 0.012);
-      env.gain.exponentialRampToValueAtTime(0.001, now + offset + dur);
-
-      // Subtle distortion warmth
-      const wave = ctx.createWaveShaper();
-      const curve = new Float32Array(256);
-      for (let i = 0; i < 256; i++) {
-        const x = (i * 2) / 256 - 1;
-        curve[i] = (Math.PI + 120) * x / (Math.PI + 120 * Math.abs(x));
-      }
-      wave.curve = curve;
-
-      osc.connect(wave);
-      wave.connect(env);
-      env.connect(master);
-
-      osc.start(now + offset);
-      osc.stop(now + offset + dur + 0.05);
-    });
-
-    // Sub-thump underneath
-    const thump = ctx.createOscillator();
-    thump.type = 'sine';
-    thump.frequency.setValueAtTime(52, now);
-    thump.frequency.exponentialRampToValueAtTime(22, now + 0.18);
-
-    const thumpEnv = ctx.createGain();
-    thumpEnv.gain.setValueAtTime(0.7, now);
-    thumpEnv.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
-
-    thump.connect(thumpEnv);
-    thumpEnv.connect(master);
-    thump.start(now);
-    thump.stop(now + 0.25);
-  }
-
-  // ── 3. TENSION LAYER — rising dissonance ─────────────────
-  function startTension() {
-    const ctx = ac();
-    const master = getMaster();
-
-    tensionGain = ctx.createGain();
-    tensionGain.gain.value = 0;
-
-    // Cluster of slightly detuned oscillators
-    const freqs = [220, 220.8, 221.9, 277.2, 329.8];
-    freqs.forEach((f, i) => {
-      const osc = ctx.createOscillator();
-      osc.type = i % 2 === 0 ? 'triangle' : 'sawtooth';
-      osc.frequency.value = f;
-
-      const g = ctx.createGain();
-      g.gain.value = 0.06;
-
-      osc.connect(g);
-      g.connect(tensionGain);
-      osc.start();
-      audioNodes.push(osc);
-    });
-
-    // Slow filter sweep
-    const filter = ctx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.value = 300;
-    filter.Q.value = 3.5;
-
-    tensionGain.connect(filter);
-    filter.connect(master);
-
-    // LFO on filter
-    const lfo = ctx.createOscillator();
-    lfo.frequency.value = 0.04;
-    const lfoG = ctx.createGain();
-    lfoG.gain.value = 180;
-    lfo.connect(lfoG);
-    lfoG.connect(filter.frequency);
-    lfo.start();
-    audioNodes.push(lfo);
-  }
-
-  // ── 4. VOID WHISPER — high-freq breath texture ───────────
-  function startWhisper() {
-    const ctx = ac();
-    const master = getMaster();
-
-    const bufSize = ctx.sampleRate * 2;
-    const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
-    const d = buf.getChannelData(0);
-    for (let i = 0; i < bufSize; i++) d[i] = Math.random() * 2 - 1;
-
-    const noise = ctx.createBufferSource();
-    noise.buffer = buf;
-    noise.loop = true;
-
-    const hpf = ctx.createBiquadFilter();
-    hpf.type = 'highpass';
-    hpf.frequency.value = 3800;
-    hpf.Q.value = 0.8;
-
-    const whisperGain = ctx.createGain();
-    whisperGain.gain.value = 0;
-
-    // Breathe in and out slowly
-    const lfo = ctx.createOscillator();
-    lfo.frequency.value = 0.11;
-    const lfoG = ctx.createGain();
-    lfoG.gain.value = 0.022;
-    lfo.connect(lfoG);
-    lfoG.connect(whisperGain.gain);
-    lfo.start();
-
-    noise.connect(hpf);
-    hpf.connect(whisperGain);
-    whisperGain.connect(master);
-    noise.start();
-
-    whisperGain.gain.setTargetAtTime(0.025, ctx.currentTime, 4);
-
-    audioNodes.push(noise, lfo);
-  }
-
-  // ── VOID STINGER — iconic 3-note motif (on page load) ────
-  function playStinger() {
-    const ctx = ac();
-    const master = getMaster();
-    const now = ctx.currentTime + 0.8;
-
-    // The motif: descending minor — unforgettable
-    const notes = [
-      { freq: 146.8, t: 0,    dur: 0.6,  vol: 0.28 },  // D3
-      { freq: 130.8, t: 0.55, dur: 0.5,  vol: 0.22 },  // C3
-      { freq: 110.0, t: 1.0,  dur: 1.4,  vol: 0.32 },  // A2 — held
-    ];
-
-    notes.forEach(n => {
-      const osc = ctx.createOscillator();
-      osc.type = 'triangle';
-      osc.frequency.value = n.freq;
-
-      // Detune for warmth
-      const osc2 = ctx.createOscillator();
-      osc2.type = 'sine';
-      osc2.frequency.value = n.freq * 1.004;
-
-      const env = ctx.createGain();
-      env.gain.setValueAtTime(0, now + n.t);
-      env.gain.linearRampToValueAtTime(n.vol, now + n.t + 0.06);
-      env.gain.setValueAtTime(n.vol, now + n.t + n.dur - 0.15);
-      env.gain.linearRampToValueAtTime(0, now + n.t + n.dur);
-
-      osc.connect(env);
-      osc2.connect(env);
-      env.connect(master);
-
-      osc.start(now + n.t);
-      osc.stop(now + n.t + n.dur + 0.1);
-      osc2.start(now + n.t);
-      osc2.stop(now + n.t + n.dur + 0.1);
-    });
-  }
-
-  // ── BPM SCHEDULER — heartbeat accelerates over time ──────
-  function scheduleBeat() {
-    if (!audioPlaying) return;
-    triggerHeartbeat(currentBPM);
-
-    // Gradually accelerate from 42 to 88 BPM over 4 minutes
-    if (currentBPM < 88) currentBPM += 0.18;
-
-    // Tension rises with BPM
-    if (tensionGain) {
-      const t = (currentBPM - 42) / 46;  // 0→1
-      tensionGain.gain.setTargetAtTime(t * 0.55, audioCtx.currentTime, 1.5);
-    }
-
-    const msPerBeat = (60 / currentBPM) * 1000;
-    bpmInterval = setTimeout(scheduleBeat, msPerBeat);
-  }
-
-  // ── MAIN START / STOP ─────────────────────────────────────
-  function startVoidAudio() {
-    if (audioPlaying) return;
-    audioPlaying = true;
-    getMaster._node = null;
-
-    startDrone();
-    startTension();
-    startWhisper();
-    playStinger();
-
+  function copyCmd(id) {
+    const text = document.getElementById(id).innerText.replace('$ ', '');
+    navigator.clipboard.writeText(text);
+    const btn = event.currentTarget;
+    const original = btn.innerHTML;
+    btn.innerHTML = '<span>✓</span><span>Kopiert!</span>';
+    btn.style.background = 'var(--green)';
     setTimeout(() => {
-      if (audioPlaying) scheduleBeat();
-    }, 1800);
-
-    // Show mute button
-    const btn = document.getElementById('mute-btn');
-    if (btn) { btn.classList.add('visible'); btn.textContent = '🔊'; }
+      btn.innerHTML = original;
+      btn.style.background = 'var(--red)';
+    }, 2000);
   }
 
-  function stopVoidAudio() {
-    audioPlaying = false;
-    clearTimeout(bpmInterval);
-    currentBPM = 42;
-
-    audioNodes.forEach(n => { try { n.stop(); } catch(e){} });
-    audioNodes = [];
-
-    if (voidDroneGain) voidDroneGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.5);
-    if (tensionGain)   tensionGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.5);
-
-    getMaster._node = null;
-    setTimeout(() => { if (audioCtx) { audioCtx.close(); audioCtx = null; } }, 600);
-  }
-
-  // ── MUTE TOGGLE ───────────────────────────────────────────
   let muted = false;
-  let masterGainNode = null;
-
   function toggleMute() {
-    const btn = document.getElementById('mute-btn');
-    if (!audioCtx) return;
-
     muted = !muted;
-
-    if (muted) {
-      // Fade out gracefully
-      if (voidDroneGain) voidDroneGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.4);
-      if (tensionGain)   tensionGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.4);
-      if (btn) { btn.textContent = '🔇'; btn.classList.add('muted'); }
-    } else {
-      // Fade back in
-      if (voidDroneGain) voidDroneGain.gain.setTargetAtTime(0.55, audioCtx.currentTime, 0.6);
-      if (tensionGain) {
-        const t = (currentBPM - 42) / 46;
-        tensionGain.gain.setTargetAtTime(t * 0.55, audioCtx.currentTime, 0.6);
-      }
-      if (btn) { btn.textContent = '🔊'; btn.classList.remove('muted'); }
-    }
-  }
-
-  // ── AUTOPLAY — fires on first interaction anywhere ────────
-  let _audioStarted = false;
-  function _tryAutoplay() {
-    if (_audioStarted) return;
-    _audioStarted = true;
-    document.removeEventListener('touchstart', _tryAutoplay);
-    document.removeEventListener('mousedown',  _tryAutoplay);
-    document.removeEventListener('scroll',     _tryAutoplay);
-    document.removeEventListener('keydown',    _tryAutoplay);
-    startVoidAudio();
-  }
-
-  document.addEventListener('touchstart', _tryAutoplay, { passive: true });
-  document.addEventListener('mousedown',  _tryAutoplay);
-  document.addEventListener('scroll',     _tryAutoplay, { passive: true });
-  document.addEventListener('keydown',    _tryAutoplay);
-
-  // ── COPY FUNCTIONS ────────────────────────────────────────
-  const CMD = "curl -fsSL https://raw.githubusercontent.com/IrsanAI/void/master/install/install.sh | bash";
-
-  function copyAlias() {
-    navigator.clipboard.writeText("void").then(() => {
-      const btn = document.getElementById('alias-btn');
-      const lbl = document.getElementById('alias-label');
-      btn.classList.add('copied');
-      lbl.textContent = 'Kopiert ✓';
-      setTimeout(() => { btn.classList.remove('copied'); lbl.textContent = 'Alias kopieren'; }, 2500);
-    });
-  }
-
-  function copyCmd() {
-    navigator.clipboard.writeText(CMD).then(() => {
-      const btn = document.getElementById('copy-btn');
-      const lbl = document.getElementById('copy-label');
-      btn.classList.add('copied');
-      lbl.textContent = 'Kopiert ✓';
-      setTimeout(() => { btn.classList.remove('copied'); lbl.textContent = 'Befehl kopieren'; }, 2500);
-    });
-  }
-
-  function copyCmd2() {
-    navigator.clipboard.writeText(CMD).then(() => {
-      const btn = document.getElementById('copy-btn-2');
-      const lbl = document.getElementById('copy-label-2');
-      btn.classList.add('copied');
-      lbl.textContent = 'Kopiert ✓';
-      setTimeout(() => { btn.classList.remove('copied'); lbl.textContent = 'Befehl kopieren'; }, 2500);
-    });
+    document.getElementById('mute-btn').innerText = muted ? '🔇' : '🔊';
   }
 </script>
+
 </body>
 </html>
