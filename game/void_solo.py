@@ -482,100 +482,91 @@ class SoloGame:
     def _render(self):
         with self.render_lock:
             T.clear()
-            self._draw_header()
-            print()
-            self._draw_grid()
-            print()
-            self._draw_bots()
-            print()
-            # Sound-Visualizer
-            viz = self.snd.get_visualizer()
-            if viz:
-                print(viz)
-                print()
-            self._draw_messages()
-            print()
-            self._draw_controls()
+            self._draw_header()      # 3 Zeilen
+            self._draw_grid()        # GRID+3 Zeilen
+            self._draw_bots()        # 1 Zeile
+            self._draw_visualizer()  # 3 Zeilen (Sound)
+            self._draw_messages()    # 3 Zeilen
+            self._draw_controls()    # 1 Zeile
 
     def _draw_header(self):
+        G = self.GRID
         tl = self.time_left()
         time_s = T.red(f"⏱{tl}s") if tl <= 30 else T.yellow(f"⏱{tl}s")
         diff_c = {"easy": T.green, "normal": T.yellow, "hard": T.red}[self.difficulty]
-        agg_pct = int(self.void.aggression * 10)
-        agg_bar = T.red("█" * agg_pct) + T.gray("░" * (10 - agg_pct))
-        en_pct  = int(self.energy / 10)
+        agg_pct = int(self.void.aggression * 8)
+        agg_bar = T.red("█" * agg_pct) + T.gray("░" * (8 - agg_pct))
+        en_pct  = int((self.energy / 100) * 8)
         en_col  = "92" if self.energy > 60 else ("93" if self.energy > 30 else "91")
-        en_bar  = f"\033[{en_col}m" + "█" * en_pct + "\033[90m" + "░" * (10-en_pct) + "\033[0m"
-        status  = T.green("●") if self.alive else T.red("✖")
-
-        print(f" {status} {T.bold(diff_c(self.difficulty[:3].upper()))}  {time_s}  {T.cyan('◈'+str(self.score))}")
-        print(f" {T.red('AGG')} [{agg_bar}]  {T.cyan('EN')} [{en_bar}]{self.energy}")
+        en_bar  = f"\033[{en_col}m" + "█" * en_pct + "\033[90m" + "░" * (8-en_pct) + "\033[0m"
+        print(f"{T.bold(diff_c(self.difficulty[:3].upper()))} {time_s} {T.cyan('◈'+str(self.score))}pts")
+        print(f"{T.red('A')}[{agg_bar}] {T.cyan('E')}[{en_bar}]{self.energy}")
         if self.last_void_msg:
-            msg = self.last_void_msg[:38]  # Truncate für schmale Screens
-            print(f" {T.red('▶')} {T.dim(msg)}")
+            print(f"{T.red('▶')} {T.dim(self.last_void_msg[:50])}")
+        else:
+            print()
 
     def _draw_grid(self):
-        grid = [[T.gray('·')] * self.GRID for _ in range(self.GRID)]
-
+        G = self.GRID
+        grid = [[T.gray('·')] * G for _ in range(G)]
         for sx, sy in self.signals:
-            if 0 <= sx < self.GRID and 0 <= sy < self.GRID:
+            if 0 <= sx < G and 0 <= sy < G:
                 grid[sy][sx] = T.yellow('◈')
-
         if self.void.visible:
             vx, vy = self.void.x, self.void.y
-            if 0 <= vx < self.GRID and 0 <= vy < self.GRID:
+            if 0 <= vx < G and 0 <= vy < G:
                 grid[vy][vx] = T.bold(T.red('▓'))
-
         bot_colors = ["96", "95", "94"]
         for i, bot in enumerate(self.bots):
-            if bot.alive and 0 <= bot.x < self.GRID and 0 <= bot.y < self.GRID:
+            if bot.alive and 0 <= bot.x < G and 0 <= bot.y < G:
                 grid[bot.y][bot.x] = f"\033[{bot_colors[i%3]}m○\033[0m"
-            elif not bot.alive and 0 <= bot.x < self.GRID and 0 <= bot.y < self.GRID:
+            elif not bot.alive and 0 <= bot.x < G and 0 <= bot.y < G:
                 grid[bot.y][bot.x] = T.gray('×')
-
-        if self.alive and 0 <= self.px < self.GRID and 0 <= self.py < self.GRID:
+        if self.alive and 0 <= self.px < G and 0 <= self.py < G:
             grid[self.py][self.px] = T.bold(T.green('◉'))
-
-        # Kompaktes Grid — kein Leerzeichen zwischen Zellen
-        print(T.gray(" ┌" + "─" * (GRID*2) + "┐"))
+        print(T.gray("┌" + "─" * (G*2) + "┐"))
         for row in grid:
-            line = T.gray(" │")
+            line = T.gray("│")
             for cell in row:
                 line += cell + " "
-            line = line.rstrip(" ") + T.gray("│")
-            print(line)
-        print(T.gray(" └" + "─" * (GRID*2) + "┘"))
-        print(f" {T.green('◉')}Du {T.cyan('○')}Bot {T.yellow('◈')}Sig {T.red('▓')}VOID")
+            print(line.rstrip() + T.gray("│"))
+        print(T.gray("└" + "─" * (G*2) + "┘"))
+        print(f"{T.green('◉')}Du {T.cyan('○')}Bot {T.yellow('◈')}Sig {T.red('▓')}VOID")
 
     def _draw_bots(self):
-        alive = [b for b in self.bots if b.alive]
-        dead  = [b for b in self.bots if not b.alive]
         parts = []
-        for b in alive:
-            parts.append(f"{T.cyan('●')}{b.name[:5]} {T.gray(str(b.score))}")
-        for b in dead:
-            parts.append(T.gray(f"×{b.name[:5]}"))
-        print(" " + "  ".join(parts))
+        for b in self.bots:
+            if b.alive:
+                parts.append(f"{T.cyan('●')}{b.name} {T.gray(str(b.score))}")
+            else:
+                parts.append(T.gray(f"×{b.name}"))
+        print(" ".join(parts))
+
+    def _draw_visualizer(self):
+        viz = self.snd.get_visualizer()
+        if viz:
+            lines = viz.split('\n')
+            for l in lines[-3:]:
+                print(l)
 
     def _draw_messages(self):
-        if not self.messages:
-            return
-        print(T.gray(" ─────────────────────────────"))
-        for ts, msg, style in self.messages[-3:]:
-            short_ts = ts[6:]  # nur HH:MM:SS → MM:SS
-            msg_cut = msg[:36]
-            if style == "void":
-                print(f" {T.dim(short_ts)} {T.red(msg_cut)}")
-            elif style == "good":
-                print(f" {T.dim(short_ts)} {T.green(msg_cut)}")
-            elif style == "warn":
-                print(f" {T.dim(short_ts)} {T.yellow(msg_cut)}")
-            else:
-                print(f" {T.dim(short_ts)} {T.dim(msg_cut)}")
+        G = self.GRID
+        print(T.gray("─" * (G*2+1)))
+        shown = self.messages[-3:]
+        for ts, msg, style in shown:
+            short = ts[-5:]
+            cut = msg[:50]
+            if style == "void":   print(f"{T.dim(short)} {T.red(cut)}")
+            elif style == "good": print(f"{T.dim(short)} {T.green(cut)}")
+            elif style == "warn": print(f"{T.dim(short)} {T.yellow(cut)}")
+            else:                 print(f"{T.dim(short)} {T.dim(cut)}")
+        for _ in range(3 - len(shown)):
+            print()
 
     def _draw_controls(self):
-        print(T.gray(" ─────────────────────────────"))
-        print(f" {T.bold('W')}↑ {T.bold('S')}↓ {T.bold('A')}← {T.bold('D')}→  "
+        G = self.GRID
+        print(T.gray("─" * (G*2+1)))
+        print(f"{T.bold('W')}↑{T.bold('S')}↓{T.bold('A')}←{T.bold('D')}→ "
               f"{T.bold('E')}Scan  {T.bold('R')}Rast  "
               f"{T.bold('H')}Top  {T.bold('Q')}Exit")
 

@@ -78,13 +78,14 @@ class LayoutEngine:
     """
 
     HEADER_LINES   = 3
-    CONTROLS_LINES = 2
-    BOT_LINES      = 2
-    LOG_MIN        = 2
-    LOG_MAX        = 6
+    CONTROLS_LINES = 1   # Eine Zeile reicht
+    BOT_LINES      = 1   # Kompakt: alle Bots in einer Zeile
+    LOG_MIN        = 3
+    LOG_MAX        = 4
     GRID_MIN       = 6
-    GRID_MAX       = 14
-    CHAR_RATIO     = 0.50   # Termux-Standard
+    GRID_MAX       = 10  # Samsung 54cols: max sinnvoll 10
+    CHAR_RATIO     = 0.50
+    VIZ_LINES      = 3   # Visualizer-Zeilen (Sound)
 
     def compute(self, cols: int, rows: int) -> LayoutProfile:
         # ── Schritt 1: Klasse bestimmen ──────────────────────────
@@ -95,26 +96,32 @@ class LayoutEngine:
         else:
             class_ = WIDE
 
-        # ── Schritt 2: Zeichenverhältnis schätzen ────────────────
-        # Auf sehr schmalen Screens werden Fonts oft größer → ratio sinkt
+        # ── Schritt 2: Zeichenverhältnis ─────────────────────────
         char_ratio = self.CHAR_RATIO
         if cols < 40:
             char_ratio = 0.44
         elif cols > 90:
             char_ratio = 0.55
 
-        # ── Schritt 3: Padding berechnen ─────────────────────────
-        padding = 1 if class_ == NARROW else 2
+        # ── Schritt 3: Padding — minimal für schmale Screens ─────
+        padding = 1  # immer 1, sonst wird's zu eng
 
         # ── Schritt 4: Verfügbare Breite für Grid ────────────────
-        # Grid-Zelle = 2 cols, Rahmen = 2 cols, Padding = 2×padding
-        avail_cols_for_grid = cols - 2 - (2 * padding)
+        # Grid-Zelle = 2 cols (Zeichen + Leerzeichen)
+        # Rahmen: │ links + │ rechts = 2 cols
+        # Padding: 1 links = 1 col
+        avail_cols_for_grid = cols - 2 - padding  # kein rechter Padding
         max_grid_from_width = avail_cols_for_grid // 2
 
         # ── Schritt 5: Verfügbare Höhe für Grid ──────────────────
-        # Feste Elemente: header + controls + bots + log_min + separator
-        fixed = (self.HEADER_LINES + self.CONTROLS_LINES +
-                 self.BOT_LINES + self.LOG_MIN + 3)  # 3 Separatoren
+        # Feste Elemente exakt:
+        # header(3) + rahmen_oben(1) + rahmen_unten(1) + legend(1)
+        # + bots(1) + sep(1) + viz(3) + sep(1) + log(3) + sep(1) + controls(1)
+        fixed = (self.HEADER_LINES + 2 + 1 +  # header + grid-rahmen + legend
+                 self.BOT_LINES + 1 +           # bots + sep
+                 self.VIZ_LINES + 1 +           # visualizer + sep
+                 self.LOG_MIN + 1 +             # log + sep
+                 self.CONTROLS_LINES)
         avail_rows_for_grid = rows - fixed
         max_grid_from_height = max(self.GRID_MIN, avail_rows_for_grid)
 
@@ -127,10 +134,12 @@ class LayoutEngine:
         grid_size = max(grid_size, self.GRID_MIN)
 
         # ── Schritt 7: Log-Zeilen aus verbleibendem Platz ────────
-        used = (self.HEADER_LINES + grid_size + self.CONTROLS_LINES +
-                self.BOT_LINES + 3)
-        remaining = rows - used
-        log_lines = max(self.LOG_MIN, min(remaining, self.LOG_MAX))
+        used = (self.HEADER_LINES + 2 + 1 + grid_size +
+                self.BOT_LINES + 1 +
+                self.VIZ_LINES + 1 +
+                1 + self.CONTROLS_LINES)
+        remaining = max(0, rows - used)
+        log_lines = max(self.LOG_MIN, min(remaining + self.LOG_MIN, self.LOG_MAX))
 
         # ── Schritt 8: Dichte (Density) ──────────────────────────
         usable = rows - self.HEADER_LINES - self.CONTROLS_LINES
