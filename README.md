@@ -37,6 +37,14 @@ curl -fsSL https://raw.githubusercontent.com/IrsanAI/void/main/install/install_i
 ```
 **Voraussetzung:** [a-Shell](https://apps.apple.com/app/a-shell/id1473805438) oder [iSH](https://apps.apple.com/app/ish-shell/id1436902243) aus dem App Store.
 
+### Windows (PowerShell / Terminal)
+```powershell
+git clone https://github.com/IrsanAI/void.git
+cd void
+python game/void_launcher.py
+```
+**Hinweis:** Empfohlen ist **Windows Terminal** mit UTF-8-Font (z. B. Cascadia Mono oder JetBrains Mono), damit die Grid-Symbole sauber dargestellt werden.
+
 → **[Zur Landing Page](https://irsanai.github.io/void)**
 
 ---
@@ -118,6 +126,22 @@ python3 ~/games/void/game/void_solo_enhanced.py
 - **Cross-Platform:** Android (Termux) & iOS (a-Shell/iSH).
 - **Terminal-UI:** ANSI-Escape-Codes & Glitch-Rendering-Engine.
 - **Sound-Engine:** Adaptive Fallbacks für Termux-API, Sox, Beep und iOS-CLI.
+
+### 🔊 Sound-Diagnose
+
+Falls du in Termux nur Vibrationen, aber keinen hörbaren Sound bekommst:
+
+```bash
+python3 ~/games/void/game/void_sound_diagnose.py
+```
+
+Typischer Fix in Termux:
+
+```bash
+pkg install sox termux-api
+```
+
+> Hinweis: Für `termux-vibrate` muss zusätzlich die **Termux:API App** installiert sein.
 
 ---
 

@@ -14,11 +14,16 @@ import time
 import random
 import sys
 import os
-import tty
-import termios
 import threading
 import json
 import shutil
+
+IS_WINDOWS = os.name == "nt"
+if IS_WINDOWS:
+    import msvcrt
+else:
+    import tty
+    import termios
 
 # Neue Enhanced Module
 try:
@@ -43,14 +48,18 @@ except ImportError:
         _LAYOUT_AVAILABLE = False
 
 try:
-    from void_sound_enhanced import get_sound
+    from void_sound_enhanced import get_sound, get_capabilities_snapshot
     _SOUND_AVAILABLE = True
 except ImportError:
     try:
         from void_sound import get_sound
+        def get_capabilities_snapshot():
+            return {}
         _SOUND_AVAILABLE = True
     except ImportError:
         _SOUND_AVAILABLE = False
+        def get_capabilities_snapshot():
+            return {}
         def get_sound():
             class _Dummy:
                 def play(self, *a): pass
@@ -68,15 +77,16 @@ except ImportError:
 class T:
     @staticmethod
     def clear():
-        """Ultra-stabiles Clear für Termux/Android Keyboard-Resize"""
-        # \033[3J löscht den Scrollback-Buffer, verhindert Geister-Zeilen
-        print("\033[2J\033[3J\033[H\033[?25l", end="", flush=True)
-        if os.name == 'posix':
-            try:
-                # Zusätzliche Sicherheit für Termux
-                os.system('clear')
-            except:
-                pass
+        """Stabiles Bildschirm-Clear ohne externes `clear`-Kommando."""
+        print("\033[2J\033[H\033[?25l", end="", flush=True)
+
+    @staticmethod
+    def redraw_start():
+        print("\033[H", end="", flush=False)
+
+    @staticmethod
+    def use_alt_buffer(enable=True):
+        print("\033[?1049h" if enable else "\033[?1049l", end="", flush=True)
 
     @staticmethod
     def hide():      print("\033[?25l", end="", flush=True)
@@ -257,6 +267,29 @@ class VoidAI:
 
 # ── Haupt-Spielzustand ────────────────────────────────────────────
 class SoloGame:
+
+    @staticmethod
+    def _strip_ansi(text):
+        import re
+        return re.sub(r"\x1b\[[0-9;?]*[A-Za-z]", "", text)
+
+    def _fit_line(self, text, max_cols):
+        plain = self._strip_ansi(text)
+        if len(plain) > max_cols:
+            return plain[:max_cols]
+        return text
+
+    def _line(self, text=""):
+        self._frame_lines.append(str(text))
+
+    def _flush_frame(self, cols, rows):
+        T.redraw_start()
+        visible = [self._fit_line(l, cols) for l in self._frame_lines[:rows]]
+        if len(visible) < rows:
+            visible.extend([""] * (rows - len(visible)))
+        payload = "\n".join(f"\033[2K{line}" for line in visible)
+        print(payload, end="", flush=True)
+
     def __init__(self, difficulty="normal"):
         cfg           = DIFFICULTY[difficulty]
         self.L        = get_layout() if _LAYOUT_AVAILABLE else None
@@ -278,6 +311,10 @@ class SoloGame:
         self.highscores      = self._load_scores()
         self.snd             = get_sound()
         self.last_render_time = time.time()
+        try:
+            _LOG.info(f"Sound capabilities: {get_capabilities_snapshot()}")
+        except Exception:
+            pass
         if self.L:
             self.L.on_resize(self._on_resize)
 
@@ -327,9 +364,12 @@ class SoloGame:
             pass
 
     def start_game(self):
+        T.use_alt_buffer(True)
         T.hide()
         self.snd.play("game_start")
         self.snd.start_heartbeat(44)
+        if hasattr(self.snd, "start_ambient"):
+            self.snd.start_ambient(0.10)
         threading.Thread(target=self._void_thread, daemon=True).start()
         threading.Thread(target=self._bot_thread, daemon=True).start()
         threading.Thread(target=self._signal_thread, daemon=True).start()
@@ -452,6 +492,7 @@ class SoloGame:
             if ch == 'q':
                 self.running = False
                 T.show()
+                T.use_alt_buffer(False)
                 T.clear()
                 sys.exit(0)
 
@@ -512,22 +553,22 @@ class SoloGame:
 
     def _render(self, force=False):
         with self.render_lock:
-            T.clear()
-            
-            # Dynamische Größe holen – verhindert das komplette Chaos beim Keyboard
             try:
-                cols, rows = shutil.get_terminal_size()
+                size = shutil.get_terminal_size(fallback=(80, 24))
+                cols, rows = max(20, size.columns), max(12, size.lines)
                 _LOG.debug(f"Render: Terminal Size {cols}x{rows}")
             except Exception as e:
                 cols, rows = 80, 24
                 _LOG.error(f"Fehler beim Abrufen der Terminal-Größe: {e}")
-            
+
+            self._frame_lines = []
             self._draw_header()
             self._draw_grid()
             self._draw_bots()
             self._draw_visualizer()
             self._draw_messages()
             self._draw_controls()
+            self._flush_frame(cols, rows)
 
     def _draw_header(self):
         G = self.GRID
@@ -539,15 +580,15 @@ class SoloGame:
         en_pct  = int((self.energy / 100) * 8)
         en_col  = "92" if self.energy > 60 else ("93" if self.energy > 30 else "91")
         en_bar  = f"\033[{en_col}m" + "█" * en_pct + "\033[90m" + "░" * (8-en_pct) + "\033[0m"
-        print(f"{T.bold(diff_c(self.difficulty[:3].upper()))} {time_s} {T.cyan('◈'+str(self.score))}pts")
-        print(f"{T.red('A')}[{agg_bar}] {T.cyan('E')}[{en_bar}]{self.energy}")
+        self._line(f"{T.bold(diff_c(self.difficulty[:3].upper()))} {time_s} {T.cyan('◈'+str(self.score))}pts")
+        self._line(f"{T.red('A')}[{agg_bar}] {T.cyan('E')}[{en_bar}]{self.energy}")
         if self.last_void_msg:
             msg = self.last_void_msg[:50]
             if self.L:
                 msg = self.L.glitch_text(msg)
-            print(f"{T.red('▶')} {T.dim(msg)}")
+            self._line(f"{T.red('▶')} {T.dim(msg)}")
         else:
-            print()
+            self._line()
 
     def _draw_grid(self):
         G = self.GRID
@@ -567,14 +608,14 @@ class SoloGame:
                 grid[bot.y][bot.x] = T.gray('×')
         if self.alive and 0 <= self.px < G and 0 <= self.py < G:
             grid[self.py][self.px] = T.bold(T.green('◉'))
-        print(T.gray("┌" + "─" * (G*2) + "┐"))
+        self._line(T.gray("┌" + "─" * (G*2) + "┐"))
         for row in grid:
             line = T.gray("│")
             for cell in row:
                 line += cell + " "
-            print(line.rstrip() + T.gray("│"))
-        print(T.gray("└" + "─" * (G*2) + "┘"))
-        print(f"{T.green('◉')}Du {T.cyan('○')}Bot {T.yellow('◈')}Sig {T.red('▓')}VOID")
+            self._line(line.rstrip() + T.gray("│"))
+        self._line(T.gray("└" + "─" * (G*2) + "┘"))
+        self._line(f"{T.green('◉')}Du {T.cyan('○')}Bot {T.yellow('◈')}Sig {T.red('▓')}VOID")
 
     def _draw_bots(self):
         parts = []
@@ -583,35 +624,35 @@ class SoloGame:
                 parts.append(f"{T.cyan('●')}{b.name} {T.gray(str(b.score))}")
             else:
                 parts.append(T.gray(f"×{b.name}"))
-        print(" ".join(parts))
+        self._line(" ".join(parts))
 
     def _draw_visualizer(self):
         viz = self.snd.get_visualizer()
         if viz:
             lines = viz.split('\n')
             for l in lines[-3:]:
-                print(l)
+                self._line(l)
 
     def _draw_messages(self):
         G = self.GRID
-        print(T.gray("─" * (G*2+1)))
+        self._line(T.gray("─" * (G*2+1)))
         shown = self.messages[-3:]
         for ts, msg, style in shown:
             short = ts[-5:]
             cut = msg[:50]
             if self.L:
                 cut = self.L.glitch_text(cut)
-            if style == "void":   print(f"{T.dim(short)} {T.red(cut)}")
-            elif style == "good": print(f"{T.dim(short)} {T.green(cut)}")
-            elif style == "warn": print(f"{T.dim(short)} {T.yellow(cut)}")
-            else:                 print(f"{T.dim(short)} {T.dim(cut)}")
+            if style == "void":   self._line(f"{T.dim(short)} {T.red(cut)}")
+            elif style == "good": self._line(f"{T.dim(short)} {T.green(cut)}")
+            elif style == "warn": self._line(f"{T.dim(short)} {T.yellow(cut)}")
+            else:                 self._line(f"{T.dim(short)} {T.dim(cut)}")
         for _ in range(3 - len(shown)):
-            print()
+            self._line()
 
     def _draw_controls(self):
         G = self.GRID
-        print(T.gray("─" * (G*2+1)))
-        print(f"{T.bold('W')}↑{T.bold('S')}↓{T.bold('A')}←{T.bold('D')}→ "
+        self._line(T.gray("─" * (G*2+1)))
+        self._line(f"{T.bold('W')}↑{T.bold('S')}↓{T.bold('A')}←{T.bold('D')}→ "
               f"{T.bold('E')}Scan  {T.bold('R')}Rast  "
               f"{T.bold('H')}Top  {T.bold('Q')}Exit")
 
@@ -637,6 +678,7 @@ class SoloGame:
         self._save_score(self.score, survived, self.difficulty)
         
         T.show()
+        T.use_alt_buffer(False)
         T.clear()
         print()
         if survived:
@@ -650,6 +692,9 @@ class SoloGame:
         input(T.dim("  [Enter] zum Beenden..."))
 
     def _getch(self):
+        if IS_WINDOWS:
+            ch = msvcrt.getch()
+            return ch.decode("utf-8", errors="ignore")
         fd = sys.stdin.fileno()
         old = termios.tcgetattr(fd)
         try:
@@ -680,13 +725,16 @@ def choose_difficulty():
     print()
     print("  Wähle: ", end="", flush=True)
 
-    fd = sys.stdin.fileno()
-    old = termios.tcgetattr(fd)
-    try:
-        tty.setraw(fd)
-        ch = sys.stdin.read(1).lower()
-    finally:
-        termios.tcsetattr(fd, termios.TCSADRAIN, old)
+    if IS_WINDOWS:
+        ch = msvcrt.getch().decode("utf-8", errors="ignore").lower()
+    else:
+        fd = sys.stdin.fileno()
+        old = termios.tcgetattr(fd)
+        try:
+            tty.setraw(fd)
+            ch = sys.stdin.read(1).lower()
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old)
 
     if ch == '1':
         return "easy"
