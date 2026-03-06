@@ -448,6 +448,44 @@
       .psy-grid { grid-template-columns: 1fr; }
       header { padding: 50px 0 40px; }
     }
+    /* ── Sound Button ── */
+    .sound-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      margin-top: 28px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 30px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing: 0.15em;
+      padding: 10px 22px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: uppercase;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .sound-btn:hover { border-color: var(--red); color: var(--red); }
+    .sound-btn.sound-on {
+      border-color: var(--red);
+      color: var(--red);
+      box-shadow: 0 0 18px rgba(224,85,85,0.18);
+      animation: pulse-btn 2s ease-in-out infinite;
+    }
+    @keyframes pulse-btn {
+      0%,100% { box-shadow: 0 0 18px rgba(224,85,85,0.18); }
+      50%      { box-shadow: 0 0 32px rgba(224,85,85,0.38); }
+    }
+    .sound-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--muted);
+      transition: background 0.2s;
+    }
+    .sound-on .sound-dot { background: var(--red); animation: blink 1s step-end infinite; }
+
   </style>
 </head>
 <body>
@@ -462,6 +500,10 @@
   ╚═══╝   ╚═════╝ ╚═╝╚═════╝</pre>
     <p class="tagline">Psychologisches Survival<span class="cursor"></span></p>
     <p class="sub-tagline">IrsanAI · Terminal Game · Termux · Android</p>
+    <button class="sound-btn" id="sound-btn" onclick="toggleSound()">
+      <span class="sound-dot"></span>
+      ▶ VOID erwecken
+    </button>
   </div>
 </header>
 
@@ -475,7 +517,7 @@
     <div class="install-box">
       <p class="install-label">// Termux — einfügen &amp; Enter drücken</p>
       <div class="install-cmd" id="install-cmd">
-        <span class="prompt">$ </span><span class="cmd">curl</span> -fsSL <span class="url">https://raw.githubusercontent.com/IrsanAI/void/main/install/install.sh</span> | bash
+        <span class="prompt">$ </span><span class="cmd">curl</span> -fsSL <span class="url">https://raw.githubusercontent.com/IrsanAI/void/master/install/install.sh</span> | bash
       </div>
       <button class="copy-btn" id="copy-btn" onclick="copyCmd()">
         <span class="copy-icon">⎘</span>
@@ -507,6 +549,49 @@
         <p class="step-text">Nach der Installation direkt spielen — oder später mit <strong><code style="color:var(--green)">void</code></strong> starten.</p>
       </div>
     </div>
+    <!-- Alias highlight box -->
+    <div class="install-box" style="margin-top: 36px;">
+      <p class="install-label">// nach der installation — einfach tippen</p>
+      <div class="install-cmd" id="alias-cmd">
+        <span class="prompt">$ </span><span class="cmd" style="color:var(--green); font-size: 1.3em; letter-spacing: 0.08em;">void</span>
+      </div>
+      <button class="copy-btn" onclick="copyAlias()" id="alias-btn" style="background: var(--cyan); margin-top:14px;">
+        <span>⎘</span>
+        <span id="alias-label">Alias kopieren</span>
+      </button>
+      <p style="font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:12px;">
+        Der Installer richtet den Befehl <code style="color:var(--green)">void</code> automatisch ein. Ab dem ersten Neustart von Termux reicht ein Wort.
+      </p>
+    </div>
+
+    <!-- Widget section -->
+    <div class="section-label" style="margin-top:44px;">// home-screen widget</div>
+    <h2 style="margin-bottom:10px;">VOID auf dem Home-Screen</h2>
+    <p>Mit <strong style="color:var(--cyan)">Termux:Widget</strong> kannst du VOID direkt vom Android Home-Screen starten — ohne Termux manuell zu öffnen.</p>
+
+    <div class="steps" style="margin-top:22px;">
+      <div class="step">
+        <div class="step-num"></div>
+        <p class="step-text">
+          <strong>Termux:Widget installieren</strong> —
+          <a href="https://f-droid.org/packages/com.termux.widget" target="_blank" rel="noopener" style="color:var(--cyan)">F-Droid</a>
+          (kostenlos, kein Account nötig).
+        </p>
+      </div>
+      <div class="step">
+        <div class="step-num"></div>
+        <p class="step-text"><strong>Widget auf Home-Screen legen</strong> — Langer Druck auf den Home-Screen → Widgets → Termux:Widget → auf freie Fläche ziehen.</p>
+      </div>
+      <div class="step">
+        <div class="step-num"></div>
+        <p class="step-text"><strong>„VOID" auswählen</strong> — Der Installer hat den Shortcut automatisch angelegt. Einmal antippen → VOID startet sofort.</p>
+      </div>
+    </div>
+
+    <div style="background:var(--surface); border:1px solid var(--border); border-left: 3px solid var(--red); border-radius:5px; padding:16px 18px; margin-top:20px; font-family:var(--mono); font-size:12px; color:var(--muted);">
+      Der Shortcut-Script liegt automatisch in <code style="color:var(--cyan)">~/.shortcuts/VOID</code> und wird vom Installer erstellt. Termux:Widget liest genau diesen Ordner aus.
+    </div>
+
   </div>
 </section>
 
@@ -664,7 +749,7 @@
     <p style="margin-bottom:28px;">Öffne Termux. Kopiere. Enter.</p>
     <div class="install-box" style="text-align:left; max-width:600px; margin:0 auto 24px;">
       <div class="install-cmd" id="install-cmd-2">
-        <span class="prompt">$ </span><span class="cmd">curl</span> -fsSL <span class="url">https://raw.githubusercontent.com/IrsanAI/void/main/install/install.sh</span> | bash
+        <span class="prompt">$ </span><span class="cmd">curl</span> -fsSL <span class="url">https://raw.githubusercontent.com/IrsanAI/void/master/install/install.sh</span> | bash
       </div>
     </div>
     <button class="copy-btn" id="copy-btn-2" onclick="copyCmd2()" style="margin:0 auto;">
@@ -688,7 +773,387 @@
 </footer>
 
 <script>
-  const CMD = "curl -fsSL https://raw.githubusercontent.com/IrsanAI/void/main/install/install.sh | bash";
+  // ═══════════════════════════════════════════════════════
+  //  VOID — Procedural Audio Engine
+  //  Pure Web Audio API. No files. No downloads.
+  //  Dark atmospheric heartbeat that accelerates.
+  // ═══════════════════════════════════════════════════════
+
+  let audioCtx = null;
+  let audioPlaying = false;
+  let audioNodes = [];    // track all nodes for cleanup
+  let bpmInterval = null;
+  let currentBPM = 42;
+  let voidDroneGain = null;
+  let heartbeatGain = null;
+  let tensionGain = null;
+  let pulseGain = null;
+
+  // ── Utility ──────────────────────────────────────────────
+  function ac() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    return audioCtx;
+  }
+
+  function ramp(param, target, duration) {
+    param.linearRampToValueAtTime(target, ac().currentTime + duration);
+  }
+
+  // ── Master Compressor (Pseudo-3D warmth) ─────────────────
+  function getMaster() {
+    if (!getMaster._node) {
+      const comp = ac().createDynamicsCompressor();
+      comp.threshold.value = -18;
+      comp.knee.value = 12;
+      comp.ratio.value = 6;
+      comp.attack.value = 0.004;
+      comp.release.value = 0.25;
+
+      // Subtle reverb via convolver
+      const conv = ac().createConvolver();
+      const len = ac().sampleRate * 3.5;
+      const ir = ac().createBuffer(2, len, ac().sampleRate);
+      for (let c = 0; c < 2; c++) {
+        const d = ir.getChannelData(c);
+        for (let i = 0; i < len; i++) {
+          d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.2);
+        }
+      }
+      conv.buffer = ir;
+
+      const convGain = ac().createGain();
+      convGain.gain.value = 0.28;
+      const dryGain = ac().createGain();
+      dryGain.gain.value = 0.78;
+
+      comp.connect(dryGain);
+      dryGain.connect(ac().destination);
+      comp.connect(conv);
+      conv.connect(convGain);
+      convGain.connect(ac().destination);
+
+      getMaster._node = comp;
+    }
+    return getMaster._node;
+  }
+
+  // ── 1. VOID DRONE — deep sub-bass rumble ─────────────────
+  function startDrone() {
+    const ctx = ac();
+    const master = getMaster();
+
+    // Sub oscillator
+    const sub = ctx.createOscillator();
+    sub.type = 'sine';
+    sub.frequency.value = 28;
+
+    // Second detuned layer for beating effect
+    const sub2 = ctx.createOscillator();
+    sub2.type = 'sine';
+    sub2.frequency.value = 30.3;
+
+    // Texture layer
+    const tex = ctx.createOscillator();
+    tex.type = 'triangle';
+    tex.frequency.value = 56.2;
+
+    voidDroneGain = ctx.createGain();
+    voidDroneGain.gain.value = 0;
+
+    const texGain = ctx.createGain();
+    texGain.gain.value = 0.18;
+
+    // Slow LFO on drone pitch — breathing
+    const lfo = ctx.createOscillator();
+    lfo.frequency.value = 0.07;
+    const lfoGain = ctx.createGain();
+    lfoGain.gain.value = 1.4;
+    lfo.connect(lfoGain);
+    lfoGain.connect(sub.frequency);
+    lfoGain.connect(sub2.frequency);
+    lfo.start();
+
+    sub.connect(voidDroneGain);
+    sub2.connect(voidDroneGain);
+    tex.connect(texGain);
+    texGain.connect(voidDroneGain);
+    voidDroneGain.connect(master);
+
+    sub.start();
+    sub2.start();
+    tex.start();
+
+    // Fade in
+    voidDroneGain.gain.setTargetAtTime(0.55, ctx.currentTime, 2.5);
+
+    audioNodes.push(sub, sub2, tex, lfo);
+  }
+
+  // ── 2. HEARTBEAT — the iconic motif ──────────────────────
+  function triggerHeartbeat(bpm) {
+    const ctx = ac();
+    const master = getMaster();
+    const now = ctx.currentTime;
+
+    // Double-beat: lub-dub
+    [[0, 90, 0.13], [0.13, 55, 0.08]].forEach(([offset, freq, dur]) => {
+      const osc = ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+
+      const env = ctx.createGain();
+      env.gain.setValueAtTime(0, now + offset);
+      env.gain.linearRampToValueAtTime(0.9, now + offset + 0.012);
+      env.gain.exponentialRampToValueAtTime(0.001, now + offset + dur);
+
+      // Subtle distortion warmth
+      const wave = ctx.createWaveShaper();
+      const curve = new Float32Array(256);
+      for (let i = 0; i < 256; i++) {
+        const x = (i * 2) / 256 - 1;
+        curve[i] = (Math.PI + 120) * x / (Math.PI + 120 * Math.abs(x));
+      }
+      wave.curve = curve;
+
+      osc.connect(wave);
+      wave.connect(env);
+      env.connect(master);
+
+      osc.start(now + offset);
+      osc.stop(now + offset + dur + 0.05);
+    });
+
+    // Sub-thump underneath
+    const thump = ctx.createOscillator();
+    thump.type = 'sine';
+    thump.frequency.setValueAtTime(52, now);
+    thump.frequency.exponentialRampToValueAtTime(22, now + 0.18);
+
+    const thumpEnv = ctx.createGain();
+    thumpEnv.gain.setValueAtTime(0.7, now);
+    thumpEnv.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+
+    thump.connect(thumpEnv);
+    thumpEnv.connect(master);
+    thump.start(now);
+    thump.stop(now + 0.25);
+  }
+
+  // ── 3. TENSION LAYER — rising dissonance ─────────────────
+  function startTension() {
+    const ctx = ac();
+    const master = getMaster();
+
+    tensionGain = ctx.createGain();
+    tensionGain.gain.value = 0;
+
+    // Cluster of slightly detuned oscillators
+    const freqs = [220, 220.8, 221.9, 277.2, 329.8];
+    freqs.forEach((f, i) => {
+      const osc = ctx.createOscillator();
+      osc.type = i % 2 === 0 ? 'triangle' : 'sawtooth';
+      osc.frequency.value = f;
+
+      const g = ctx.createGain();
+      g.gain.value = 0.06;
+
+      osc.connect(g);
+      g.connect(tensionGain);
+      osc.start();
+      audioNodes.push(osc);
+    });
+
+    // Slow filter sweep
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 300;
+    filter.Q.value = 3.5;
+
+    tensionGain.connect(filter);
+    filter.connect(master);
+
+    // LFO on filter
+    const lfo = ctx.createOscillator();
+    lfo.frequency.value = 0.04;
+    const lfoG = ctx.createGain();
+    lfoG.gain.value = 180;
+    lfo.connect(lfoG);
+    lfoG.connect(filter.frequency);
+    lfo.start();
+    audioNodes.push(lfo);
+  }
+
+  // ── 4. VOID WHISPER — high-freq breath texture ───────────
+  function startWhisper() {
+    const ctx = ac();
+    const master = getMaster();
+
+    const bufSize = ctx.sampleRate * 2;
+    const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) d[i] = Math.random() * 2 - 1;
+
+    const noise = ctx.createBufferSource();
+    noise.buffer = buf;
+    noise.loop = true;
+
+    const hpf = ctx.createBiquadFilter();
+    hpf.type = 'highpass';
+    hpf.frequency.value = 3800;
+    hpf.Q.value = 0.8;
+
+    const whisperGain = ctx.createGain();
+    whisperGain.gain.value = 0;
+
+    // Breathe in and out slowly
+    const lfo = ctx.createOscillator();
+    lfo.frequency.value = 0.11;
+    const lfoG = ctx.createGain();
+    lfoG.gain.value = 0.022;
+    lfo.connect(lfoG);
+    lfoG.connect(whisperGain.gain);
+    lfo.start();
+
+    noise.connect(hpf);
+    hpf.connect(whisperGain);
+    whisperGain.connect(master);
+    noise.start();
+
+    whisperGain.gain.setTargetAtTime(0.025, ctx.currentTime, 4);
+
+    audioNodes.push(noise, lfo);
+  }
+
+  // ── VOID STINGER — iconic 3-note motif (on page load) ────
+  function playStinger() {
+    const ctx = ac();
+    const master = getMaster();
+    const now = ctx.currentTime + 0.8;
+
+    // The motif: descending minor — unforgettable
+    const notes = [
+      { freq: 146.8, t: 0,    dur: 0.6,  vol: 0.28 },  // D3
+      { freq: 130.8, t: 0.55, dur: 0.5,  vol: 0.22 },  // C3
+      { freq: 110.0, t: 1.0,  dur: 1.4,  vol: 0.32 },  // A2 — held
+    ];
+
+    notes.forEach(n => {
+      const osc = ctx.createOscillator();
+      osc.type = 'triangle';
+      osc.frequency.value = n.freq;
+
+      // Detune for warmth
+      const osc2 = ctx.createOscillator();
+      osc2.type = 'sine';
+      osc2.frequency.value = n.freq * 1.004;
+
+      const env = ctx.createGain();
+      env.gain.setValueAtTime(0, now + n.t);
+      env.gain.linearRampToValueAtTime(n.vol, now + n.t + 0.06);
+      env.gain.setValueAtTime(n.vol, now + n.t + n.dur - 0.15);
+      env.gain.linearRampToValueAtTime(0, now + n.t + n.dur);
+
+      osc.connect(env);
+      osc2.connect(env);
+      env.connect(master);
+
+      osc.start(now + n.t);
+      osc.stop(now + n.t + n.dur + 0.1);
+      osc2.start(now + n.t);
+      osc2.stop(now + n.t + n.dur + 0.1);
+    });
+  }
+
+  // ── BPM SCHEDULER — heartbeat accelerates over time ──────
+  function scheduleBeat() {
+    if (!audioPlaying) return;
+    triggerHeartbeat(currentBPM);
+
+    // Gradually accelerate from 42 to 88 BPM over 4 minutes
+    if (currentBPM < 88) currentBPM += 0.18;
+
+    // Tension rises with BPM
+    if (tensionGain) {
+      const t = (currentBPM - 42) / 46;  // 0→1
+      tensionGain.gain.setTargetAtTime(t * 0.55, audioCtx.currentTime, 1.5);
+    }
+
+    const msPerBeat = (60 / currentBPM) * 1000;
+    bpmInterval = setTimeout(scheduleBeat, msPerBeat);
+  }
+
+  // ── MAIN START / STOP ─────────────────────────────────────
+  function startVoidAudio() {
+    if (audioPlaying) return;
+    audioPlaying = true;
+    getMaster._node = null;  // fresh master
+
+    startDrone();
+    startTension();
+    startWhisper();
+    playStinger();
+
+    // Delay heartbeat slightly — let drone establish first
+    setTimeout(() => {
+      if (audioPlaying) scheduleBeat();
+    }, 1800);
+
+    // Update button
+    const btn = document.getElementById('sound-btn');
+    if (btn) {
+      btn.innerHTML = '⏹ VOID stummschalten';
+      btn.classList.add('sound-on');
+    }
+  }
+
+  function stopVoidAudio() {
+    audioPlaying = false;
+    clearTimeout(bpmInterval);
+    currentBPM = 42;
+
+    audioNodes.forEach(n => { try { n.stop(); } catch(e){} });
+    audioNodes = [];
+
+    if (voidDroneGain) {
+      voidDroneGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.5);
+    }
+    if (tensionGain) {
+      tensionGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.5);
+    }
+
+    getMaster._node = null;
+
+    setTimeout(() => {
+      if (audioCtx) { audioCtx.close(); audioCtx = null; }
+    }, 600);
+
+    const btn = document.getElementById('sound-btn');
+    if (btn) {
+      btn.innerHTML = '▶ VOID erwecken';
+      btn.classList.remove('sound-on');
+    }
+  }
+
+  function toggleSound() {
+    if (audioPlaying) {
+      stopVoidAudio();
+    } else {
+      startVoidAudio();
+    }
+  }
+
+  // ── COPY FUNCTIONS ────────────────────────────────────────
+  const CMD = "curl -fsSL https://raw.githubusercontent.com/IrsanAI/void/master/install/install.sh | bash";
+
+  function copyAlias() {
+    navigator.clipboard.writeText("void").then(() => {
+      const btn = document.getElementById('alias-btn');
+      const lbl = document.getElementById('alias-label');
+      btn.classList.add('copied');
+      lbl.textContent = 'Kopiert ✓';
+      setTimeout(() => { btn.classList.remove('copied'); lbl.textContent = 'Alias kopieren'; }, 2500);
+    });
+  }
 
   function copyCmd() {
     navigator.clipboard.writeText(CMD).then(() => {
@@ -696,10 +1161,7 @@
       const lbl = document.getElementById('copy-label');
       btn.classList.add('copied');
       lbl.textContent = 'Kopiert ✓';
-      setTimeout(() => {
-        btn.classList.remove('copied');
-        lbl.textContent = 'Befehl kopieren';
-      }, 2500);
+      setTimeout(() => { btn.classList.remove('copied'); lbl.textContent = 'Befehl kopieren'; }, 2500);
     });
   }
 
@@ -709,10 +1171,7 @@
       const lbl = document.getElementById('copy-label-2');
       btn.classList.add('copied');
       lbl.textContent = 'Kopiert ✓';
-      setTimeout(() => {
-        btn.classList.remove('copied');
-        lbl.textContent = 'Befehl kopieren';
-      }, 2500);
+      setTimeout(() => { btn.classList.remove('copied'); lbl.textContent = 'Befehl kopieren'; }, 2500);
     });
   }
 </script>
