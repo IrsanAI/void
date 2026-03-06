@@ -197,16 +197,13 @@ echo ""
 # ── Direkt starten? ─────────────────────────────────────────────
 echo -n "  Jetzt spielen? [J/n] "
 read -r choice
-case "$choice" in
-  n|N)
-    echo ""
-    gray "  ┌──────────────────────────────────────┐"
-    echo -e "  │  ${BOLD}${CYAN}void${RESET}  ← einfach tippen & Enter      │"
-    gray "  └──────────────────────────────────────┘"
-    echo ""
-    ;;
-  *)
-    echo ""
-    python3 "$INSTALL_DIR/game/void_launcher.py"
-    ;;
-esac
+if [ "$choice" = "n" ] || [ "$choice" = "N" ]; then
+  echo ""
+  gray "  ┌──────────────────────────────────────┐"
+  echo -e "  │  ${BOLD}${CYAN}void${RESET}  ← einfach tippen & Enter      │"
+  gray "  └──────────────────────────────────────┘"
+  echo ""
+else
+  echo ""
+  python3 "$INSTALL_DIR/game/void_launcher.py"
+fi
