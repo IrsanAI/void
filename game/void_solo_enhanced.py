@@ -48,14 +48,18 @@ except ImportError:
         _LAYOUT_AVAILABLE = False
 
 try:
-    from void_sound_enhanced import get_sound
+    from void_sound_enhanced import get_sound, get_capabilities_snapshot
     _SOUND_AVAILABLE = True
 except ImportError:
     try:
         from void_sound import get_sound
+        def get_capabilities_snapshot():
+            return {}
         _SOUND_AVAILABLE = True
     except ImportError:
         _SOUND_AVAILABLE = False
+        def get_capabilities_snapshot():
+            return {}
         def get_sound():
             class _Dummy:
                 def play(self, *a): pass
@@ -307,6 +311,10 @@ class SoloGame:
         self.highscores      = self._load_scores()
         self.snd             = get_sound()
         self.last_render_time = time.time()
+        try:
+            _LOG.info(f"Sound capabilities: {get_capabilities_snapshot()}")
+        except Exception:
+            pass
         if self.L:
             self.L.on_resize(self._on_resize)
 
@@ -360,6 +368,8 @@ class SoloGame:
         T.hide()
         self.snd.play("game_start")
         self.snd.start_heartbeat(44)
+        if hasattr(self.snd, "start_ambient"):
+            self.snd.start_ambient(0.10)
         threading.Thread(target=self._void_thread, daemon=True).start()
         threading.Thread(target=self._bot_thread, daemon=True).start()
         threading.Thread(target=self._signal_thread, daemon=True).start()

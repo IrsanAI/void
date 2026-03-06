@@ -470,6 +470,54 @@
       box-shadow: 0 0 14px rgba(224,85,85,0.2);
     }
 
+
+    .audio-status {
+      margin-top: 10px;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      opacity: 0.7;
+    }
+
+    .top-controls {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .lang-switch-btn,
+    .mute-btn {
+      background: rgba(10,10,12,0.85);
+      border: 1px solid var(--border);
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.2s;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .lang-switch-btn {
+      border-radius: 20px;
+      min-width: 48px;
+      height: 42px;
+      padding: 0 14px;
+      font-family: var(--mono);
+      font-size: 13px;
+      letter-spacing: 0.12em;
+    }
+
+    .lang-switch-btn:hover,
+    .mute-btn:hover {
+      border-color: var(--red);
+      box-shadow: 0 0 14px rgba(224,85,85,0.2);
+    }
+
   </style>
 </head>
 <body>
@@ -484,6 +532,7 @@
     <p class="tagline">Psychologisches Survival<span class="cursor"></span></p>
     <p class="sub-tagline">IrsanAI · Terminal Game · Android · iOS · Windows</p>
     <p class="sound-hint">// berühre die seite — die void erwacht</p>
+    <p class="audio-status" id="audio-status">AUDIO: WARTET AUF INTERAKTION</p>
   </div>
 </header>
 
@@ -620,13 +669,14 @@
     document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.tabs .tab-btn').forEach(b => b.classList.remove('active'));
     document.getElementById(id).classList.add('active');
-    if (btn) btn.classList.add('active');
+    if (btn) { btn.classList.add('active'); playTone(260, 0.05, "square", 0.025); }
   }
 
   let currentLang = 'de';
   function toggleLang() {
     currentLang = currentLang === 'de' ? 'en' : 'de';
     document.getElementById('lang-btn').innerText = currentLang === 'de' ? 'EN' : 'DE';
+    playTone(300, 0.06, "triangle", 0.03);
   }
 
   // Glitch Effekt für das Banner
@@ -652,6 +702,7 @@
     const original = btn.innerHTML;
     btn.innerHTML = '<span>✓</span><span>Kopiert!</span>';
     btn.style.background = 'var(--green)';
+    playTone(520, 0.09, 'square', 0.04);
     setTimeout(() => {
       btn.innerHTML = original;
       btn.style.background = 'var(--red)';
@@ -659,10 +710,75 @@
   }
 
   let muted = false;
+  let audioCtx = null;
+  let masterGain = null;
+  let ambientInterval = null;
+
+  function setAudioStatus(text) {
+    const el = document.getElementById('audio-status');
+    if (el) el.innerText = text;
+  }
+
+  function playTone(freq = 220, duration = 0.08, type = 'sine', volume = 0.06) {
+    if (!audioCtx || !masterGain || muted) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    gain.gain.value = volume;
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(masterGain);
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+  }
+
+  async function initAudio() {
+    if (audioCtx) {
+      if (audioCtx.state === 'suspended') await audioCtx.resume();
+      return;
+    }
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) {
+      setAudioStatus('AUDIO: NICHT UNTERSTÜTZT');
+      return;
+    }
+    audioCtx = new AC();
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = 0.35;
+    masterGain.connect(audioCtx.destination);
+
+    const startAmbient = () => {
+      if (ambientInterval) return;
+      ambientInterval = setInterval(() => {
+        if (muted) return;
+        const base = 70 + Math.random() * 35;
+        playTone(base, 0.5, 'triangle', 0.018);
+        setTimeout(() => playTone(base * 1.5, 0.15, 'sine', 0.01), 120);
+      }, 2200);
+    };
+
+    startAmbient();
+    playTone(220, 0.1, 'square', 0.04);
+    setAudioStatus('AUDIO: AKTIV');
+  }
+
   function toggleMute() {
     muted = !muted;
     document.getElementById('mute-btn').innerText = muted ? '🔇' : '🔊';
+    if (!muted) {
+      initAudio();
+      setAudioStatus('AUDIO: AKTIV');
+      playTone(330, 0.07, 'sine', 0.04);
+    } else {
+      setAudioStatus('AUDIO: STUMM');
+    }
   }
+
+  window.addEventListener('pointerdown', () => {
+    initAudio();
+    playTone(180, 0.06, 'triangle', 0.03);
+  }, { once: true });
 </script>
 
 </body>

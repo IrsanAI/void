@@ -42,10 +42,10 @@ mkdir -p "$INSTALL_DIR"
 
 # ── Pakete ──────────────────────────────────────────────────────
 echo ""
-c "  [1/5] Paketquellen aktualisieren..."
+c "  [1/6] Paketquellen aktualisieren..."
 pkg update -y -q 2>/dev/null || apt-get update -q 2>/dev/null || true
 
-c "  [2/5] Python installieren (falls nötig)..."
+c "  [2/6] Python installieren (falls nötig)..."
 if ! command -v python3 &>/dev/null; then
   pkg install python -y -q 2>/dev/null || apt-get install python3 -y -q 2>/dev/null
   g "        Python installiert ✓"
@@ -53,7 +53,7 @@ else
   g "        Python bereits vorhanden ✓"
 fi
 
-c "  [3/5] git installieren (falls nötig)..."
+c "  [3/6] git installieren (falls nötig)..."
 if ! command -v git &>/dev/null; then
   pkg install git -y -q 2>/dev/null || apt-get install git -y -q 2>/dev/null
   g "        git installiert ✓"
@@ -61,9 +61,22 @@ else
   g "        git bereits vorhanden ✓"
 fi
 
+c "  [4/6] Sound-Komponenten installieren (optional, empfohlen)..."
+if ! command -v play &>/dev/null; then
+  pkg install sox -y -q 2>/dev/null || apt-get install sox -y -q 2>/dev/null || y "        sox konnte nicht installiert werden."
+fi
+if ! command -v termux-vibrate &>/dev/null; then
+  pkg install termux-api -y -q 2>/dev/null || apt-get install termux-api -y -q 2>/dev/null || y "        termux-api Paket nicht verfügbar."
+fi
+if command -v termux-vibrate &>/dev/null || command -v play &>/dev/null; then
+  g "        Sound-Basis erkannt ✓"
+else
+  y "        Nur visuelle Effekte verfügbar (kein play/termux-api)."
+fi
+
 # ── Repo clonen / aktualisieren ─────────────────────────────────
 echo ""
-c "  [4/5] VOID herunterladen..."
+c "  [5/6] VOID herunterladen..."
 REPO_URL="https://github.com/IrsanAI/void.git"
 
 if [ -d "$INSTALL_DIR/.git" ]; then
@@ -87,8 +100,8 @@ chmod +x "$INSTALL_DIR/game/void_solo.py"
 chmod +x "$INSTALL_DIR/game/void_server.py"
 chmod +x "$INSTALL_DIR/game/void_client.py"
 
-# ── [5/5] Alias + Widget einrichten ─────────────────────────────
-c "  [5/5] Alias & Home-Screen Widget einrichten..."
+# ── [6/6] Alias + Widget einrichten ─────────────────────────────
+c "  [6/6] Alias & Home-Screen Widget einrichten..."
 
 ALIAS_LINE="alias void='python3 $INSTALL_DIR/game/void_launcher.py'"
 
@@ -127,10 +140,26 @@ WIDGET_EOF
 chmod +x "$WIDGET_DIR/VOID"
 g "        Home-Screen Widget vorbereitet ✓"
 
+
+play_success_sound() {
+  if command -v play >/dev/null 2>&1; then
+    (
+      play -n -q synth 0.10 sine 523.25 vol 0.25 >/dev/null 2>&1
+      play -n -q synth 0.10 sine 659.25 vol 0.25 >/dev/null 2>&1
+      play -n -q synth 0.18 sine 783.99 vol 0.30 >/dev/null 2>&1
+    ) || true
+  elif command -v termux-vibrate >/dev/null 2>&1; then
+    termux-vibrate -d 90 >/dev/null 2>&1 || true
+    sleep 0.08
+    termux-vibrate -d 140 >/dev/null 2>&1 || true
+  fi
+}
+
 # ── Zusammenfassung ─────────────────────────────────────────────
 echo ""
 gray "  ════════════════════════════════════════════"
 g "  ✓ VOID erfolgreich installiert!"
+play_success_sound
 gray "  ════════════════════════════════════════════"
 echo ""
 b "  Installiert in:"

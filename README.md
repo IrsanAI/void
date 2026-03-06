@@ -127,6 +127,22 @@ python3 ~/games/void/game/void_solo_enhanced.py
 - **Terminal-UI:** ANSI-Escape-Codes & Glitch-Rendering-Engine.
 - **Sound-Engine:** Adaptive Fallbacks für Termux-API, Sox, Beep und iOS-CLI.
 
+### 🔊 Sound-Diagnose
+
+Falls du in Termux nur Vibrationen, aber keinen hörbaren Sound bekommst:
+
+```bash
+python3 ~/games/void/game/void_sound_diagnose.py
+```
+
+Typischer Fix in Termux:
+
+```bash
+pkg install sox termux-api
+```
+
+> Hinweis: Für `termux-vibrate` muss zusätzlich die **Termux:API App** installiert sein.
+
 ---
 
 ## 👨‍💻 Entwickelt von
