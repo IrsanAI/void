@@ -18,8 +18,20 @@ import tty
 import termios
 import threading
 import json
+import shutil
 
 # Neue Enhanced Module
+try:
+    from void_logger import get_logger
+    _LOG = get_logger()
+    _LOG.info("Solo Mode Enhanced gestartet.")
+except ImportError:
+    class _DummyLog:
+        def info(self, *a): pass
+        def debug(self, *a): pass
+        def error(self, *a): pass
+        def warning(self, *a): pass
+    _LOG = _DummyLog()
 try:
     from void_layout_enhanced import get_layout, NARROW, NORMAL, WIDE
     _LAYOUT_AVAILABLE = True
@@ -55,7 +67,17 @@ except ImportError:
 # ── Terminal ─────────────────────────────────────────────────────
 class T:
     @staticmethod
-    def clear():     print("\033[2J\033[H", end="", flush=True)
+    def clear():
+        """Ultra-stabiles Clear für Termux/Android Keyboard-Resize"""
+        # \033[3J löscht den Scrollback-Buffer, verhindert Geister-Zeilen
+        print("\033[2J\033[3J\033[H\033[?25l", end="", flush=True)
+        if os.name == 'posix':
+            try:
+                # Zusätzliche Sicherheit für Termux
+                os.system('clear')
+            except:
+                pass
+
     @staticmethod
     def hide():      print("\033[?25l", end="", flush=True)
     @staticmethod
@@ -488,13 +510,18 @@ class SoloGame:
                 self.add_msg(f"⚡ Signal absorbiert! +{SIG_REWARD} | Score: {self.score}", "good")
                 break
 
-    def _render(self):
+    def _render(self, force=False):
         with self.render_lock:
-            # Update Glitch-Effekte
-            if self.L:
-                self.L.update_glitch(0.016)
-            
             T.clear()
+            
+            # Dynamische Größe holen – verhindert das komplette Chaos beim Keyboard
+            try:
+                cols, rows = shutil.get_terminal_size()
+                _LOG.debug(f"Render: Terminal Size {cols}x{rows}")
+            except Exception as e:
+                cols, rows = 80, 24
+                _LOG.error(f"Fehler beim Abrufen der Terminal-Größe: {e}")
+            
             self._draw_header()
             self._draw_grid()
             self._draw_bots()

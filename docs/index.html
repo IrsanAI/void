@@ -474,6 +474,7 @@
     <div class="tabs">
       <button class="tab-btn active" onclick="showTab('android')">Android</button>
       <button class="tab-btn" onclick="showTab('ios')">Apple iOS</button>
+      <button class="tab-btn" onclick="toggleLang()" id="lang-btn">EN</button>
     </div>
 
     <!-- Android Tab -->
@@ -569,9 +570,34 @@
 <script>
   function showTab(id) {
     document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => {
+        if(b.id !== 'lang-btn') b.classList.remove('active');
+    });
     document.getElementById(id).classList.add('active');
     event.currentTarget.classList.add('active');
+  }
+
+  let currentLang = 'de';
+  function toggleLang() {
+    currentLang = currentLang === 'de' ? 'en' : 'de';
+    document.getElementById('lang-btn').innerText = currentLang === 'de' ? 'EN' : 'DE';
+    // Hier könnte man Texte dynamisch austauschen
+    alert("Sprache gewechselt zu: " + currentLang.toUpperCase());
+  }
+
+  // Glitch Effekt für das Banner
+  const banner = document.querySelector('.ascii-logo');
+  if(banner) {
+    setInterval(() => {
+        if(Math.random() > 0.95) {
+            banner.style.transform = `translate(${Math.random()*4-2}px, ${Math.random()*4-2}px)`;
+            banner.style.color = Math.random() > 0.5 ? 'var(--red)' : 'var(--cyan)';
+            setTimeout(() => {
+                banner.style.transform = 'none';
+                banner.style.color = 'var(--muted)';
+            }, 100);
+        }
+    }, 200);
   }
 
   function copyCmd(id) {
