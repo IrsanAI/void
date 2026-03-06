@@ -14,6 +14,29 @@ import termios
 import threading
 import json
 
+# IrsanAI Layout Framework
+try:
+    from void_layout import get_layout, NARROW, NORMAL, WIDE
+    _LAYOUT_AVAILABLE = True
+except ImportError:
+    _LAYOUT_AVAILABLE = False
+
+# Sound Engine
+try:
+    from void_sound import get_sound
+    _SOUND_AVAILABLE = True
+except ImportError:
+    _SOUND_AVAILABLE = False
+    def get_sound():
+        class _Dummy:
+            def play(self, *a): pass
+            def start_heartbeat(self, *a): pass
+            def set_bpm(self, *a): pass
+            def stop_heartbeat(self): pass
+            def get_visualizer(self): return ""
+            def stop(self): pass
+        return _Dummy()
+
 # ── Terminal ─────────────────────────────────────────────────────
 class T:
     @staticmethod
@@ -42,13 +65,21 @@ class T:
     def white(s):    return f"\033[97m{s}\033[0m"
 
 # ── Konfiguration ────────────────────────────────────────────────
-GRID        = 12
+# ── Konfiguration ────────────────────────────────────────────────
 ROUND_TIME  = 180
-BOT_COUNT   = 3          # Simulierte Mitspieler
+BOT_COUNT   = 3
 SCAN_COST   = 15
 MOVE_COST   = 5
 SIG_REWARD  = 30
-VOID_TICK   = 7.0        # Sekunden zwischen VOID-Zügen
+VOID_TICK   = 7.0
+
+# GRID wird vom Layout-Framework berechnet — Fallback: 9
+def _get_grid():
+    if _LAYOUT_AVAILABLE:
+        return get_layout().grid_size
+    return 9
+
+GRID = _get_grid()
 
 VOID_MSGS = {
     "paranoia": [
@@ -197,10 +228,13 @@ class VoidAI:
 class SoloGame:
     def __init__(self, difficulty="normal"):
         cfg           = DIFFICULTY[difficulty]
+        # ── Layout Framework ──
+        self.L        = get_layout() if _LAYOUT_AVAILABLE else None
+        self.GRID     = self.L.grid_size if self.L else 9
         self.void     = VoidAI(cfg)
-        self.bots     = [BotFragment(i+1, GRID) for i in range(BOT_COUNT)]
-        self.px       = random.randint(0, GRID-1)
-        self.py       = random.randint(0, GRID-1)
+        self.bots     = [BotFragment(i+1, self.GRID) for i in range(BOT_COUNT)]
+        self.px       = random.randint(0, self.GRID-1)
+        self.py       = random.randint(0, self.GRID-1)
         self.energy   = 100
         self.score    = 0
         self.alive    = True
@@ -212,10 +246,27 @@ class SoloGame:
         self.difficulty      = difficulty
         self.render_lock     = threading.Lock()
         self.highscores      = self._load_scores()
+        self.snd             = get_sound()
+        # Wire resize → rerender
+        if self.L:
+            self.L.on_resize(self._on_resize)
+
+    # ── Layout Resize Callback ──
+    def _on_resize(self):
+        """Wird automatisch aufgerufen wenn Terminal-Größe sich ändert."""
+        if self.L:
+            new_grid = self.L.grid_size
+            if new_grid != self.GRID:
+                self.GRID = new_grid
+                # Spieler-Position innerhalb neuer Grid-Grenzen halten
+                self.px = min(self.px, self.GRID - 1)
+                self.py = min(self.py, self.GRID - 1)
+        self._render()
 
     # ── Signale ──
     def _spawn_signals(self, n=2):
-        return [(random.randint(0,GRID-1), random.randint(0,GRID-1)) for _ in range(n)]
+        g = self.GRID if hasattr(self, 'GRID') else GRID
+        return [(random.randint(0, g-1), random.randint(0, g-1)) for _ in range(n)]
 
     def time_left(self):
         return max(0, int(ROUND_TIME - (time.time() - self.start)))
@@ -253,6 +304,8 @@ class SoloGame:
     # ── Spielschleife Threads ──
     def start_game(self):
         T.hide()
+        self.snd.play("game_start")
+        self.snd.start_heartbeat(44)
         threading.Thread(target=self._void_thread, daemon=True).start()
         threading.Thread(target=self._bot_thread, daemon=True).start()
         threading.Thread(target=self._signal_thread, daemon=True).start()
@@ -281,10 +334,13 @@ class SoloGame:
             self.void.record(self.px, self.py)
             self.void.move_toward(tx, ty)
             self.void.update_visibility()
+            self.snd.play("void_move")
 
             # Treffer prüfen
             if self.void.x == self.px and self.void.y == self.py and self.alive:
                 self.alive = False
+                self.snd.play("void_attack")
+                self.snd.stop_heartbeat()
                 self.add_msg("💀 DIE VOID HAT DICH ERWISCHT.", "void")
                 self._render()
                 time.sleep(2)
@@ -296,10 +352,22 @@ class SoloGame:
                     bot.alive = False
                     self.add_msg(f"💀 {bot.name} wurde verschluckt.", "void")
 
-            # Psychologische Nachricht
+            # Psychologische Nachricht + passender Sound
             msg = self.void.choose_msg()
             self.last_void_msg = msg
             self.add_msg(f"VOID: {msg}", "void")
+
+            # Sound-Emotion zur VOID-Nachricht
+            if self.void.aggression > 0.7:
+                self.snd.play("rivalry")
+            elif self.void.aggression > 0.4:
+                self.snd.play("paranoia")
+            else:
+                self.snd.play("loneliness")
+
+            # BPM eskaliert mit Aggression
+            new_bpm = 44 + self.void.aggression * 60
+            self.snd.set_bpm(new_bpm)
 
             # Manchmal zeigt sich die VOID
             if random.random() < (0.15 + self.void.aggression * 0.25):
@@ -333,6 +401,7 @@ class SoloGame:
             tl = self.time_left()
             if tl == 30:
                 self.add_msg("⏳ 30 Sekunden! VOID beschleunigt.", "warn")
+                self.snd.set_bpm(100)
                 self.void.escalate()
                 self.void.escalate()
                 self._render()
@@ -358,16 +427,16 @@ class SoloGame:
                 continue
 
             if ch == 'w':
-                self.py = (self.py - 1) % GRID
+                self.py = (self.py - 1) % self.GRID
                 self.energy = max(0, self.energy - MOVE_COST)
             elif ch == 's':
-                self.py = (self.py + 1) % GRID
+                self.py = (self.py + 1) % self.GRID
                 self.energy = max(0, self.energy - MOVE_COST)
             elif ch == 'a':
-                self.px = (self.px - 1) % GRID
+                self.px = (self.px - 1) % self.GRID
                 self.energy = max(0, self.energy - MOVE_COST)
             elif ch == 'd':
-                self.px = (self.px + 1) % GRID
+                self.px = (self.px + 1) % self.GRID
                 self.energy = max(0, self.energy - MOVE_COST)
             elif ch == 'e':
                 self._scan()
@@ -388,9 +457,11 @@ class SoloGame:
             self.add_msg("Zu wenig Energie zum Scannen!", "warn")
             return
         self.energy -= SCAN_COST
+        self.snd.play("scan")
         dist = abs(self.void.x - self.px) + abs(self.void.y - self.py)
         if dist <= 3:
             self.void.reveal_self(5)
+            self.snd.play("paranoia")
             self.add_msg(f"⚠ VOID DETEKTIERT! Distanz: {dist}. Position enthüllt.", "warn")
         elif dist <= 6:
             self.add_msg(f"Signal schwach. Distanz ~{dist}. Richtung unklar.", "normal")
@@ -403,6 +474,7 @@ class SoloGame:
                 self.score += SIG_REWARD
                 self.energy = min(100, self.energy + 15)
                 self.signals.remove(sig)
+                self.snd.play("signal_collect")
                 self.add_msg(f"⚡ Signal absorbiert! +{SIG_REWARD} | Score: {self.score}", "good")
                 break
 
@@ -416,91 +488,96 @@ class SoloGame:
             print()
             self._draw_bots()
             print()
+            # Sound-Visualizer
+            viz = self.snd.get_visualizer()
+            if viz:
+                print(viz)
+                print()
             self._draw_messages()
             print()
             self._draw_controls()
 
     def _draw_header(self):
         tl = self.time_left()
-        time_s = T.red(f"⏱ {tl}s") if tl <= 30 else T.yellow(f"⏱ {tl}s")
+        time_s = T.red(f"⏱{tl}s") if tl <= 30 else T.yellow(f"⏱{tl}s")
         diff_c = {"easy": T.green, "normal": T.yellow, "hard": T.red}[self.difficulty]
-        agg_bar = self._bar(self.void.aggression, 10, "91", "90")
-        en_bar  = self._bar(self.energy / 100, 10,
-                            "92" if self.energy > 60 else ("93" if self.energy > 30 else "91"), "90")
+        agg_pct = int(self.void.aggression * 10)
+        agg_bar = T.red("█" * agg_pct) + T.gray("░" * (10 - agg_pct))
+        en_pct  = int(self.energy / 10)
+        en_col  = "92" if self.energy > 60 else ("93" if self.energy > 30 else "91")
+        en_bar  = f"\033[{en_col}m" + "█" * en_pct + "\033[90m" + "░" * (10-en_pct) + "\033[0m"
+        status  = T.green("●") if self.alive else T.red("✖")
 
-        print(T.bold(T.gray(" ╔══ VOID SOLO ════════════════════════════╗")))
-        print(f"  {T.bold('AGGRESSION')} {agg_bar}  {time_s}  [{diff_c(self.difficulty.upper())}]")
-        print(f"  {T.cyan('⚡ ENERGIE')} {en_bar} {self.energy}   {T.bold(T.cyan('◈ ' + str(self.score)))} Punkte")
+        print(f" {status} {T.bold(diff_c(self.difficulty[:3].upper()))}  {time_s}  {T.cyan('◈'+str(self.score))}")
+        print(f" {T.red('AGG')} [{agg_bar}]  {T.cyan('EN')} [{en_bar}]{self.energy}")
         if self.last_void_msg:
-            print(f"  {T.red('VOID ▶')} {T.dim(self.last_void_msg)}")
-        print(T.gray(" ╚═════════════════════════════════════════╝"))
+            msg = self.last_void_msg[:38]  # Truncate für schmale Screens
+            print(f" {T.red('▶')} {T.dim(msg)}")
 
     def _draw_grid(self):
-        grid = [[T.gray('·')] * GRID for _ in range(GRID)]
+        grid = [[T.gray('·')] * self.GRID for _ in range(self.GRID)]
 
         for sx, sy in self.signals:
-            if 0 <= sx < GRID and 0 <= sy < GRID:
+            if 0 <= sx < self.GRID and 0 <= sy < self.GRID:
                 grid[sy][sx] = T.yellow('◈')
 
-        # VOID
         if self.void.visible:
             vx, vy = self.void.x, self.void.y
-            if 0 <= vx < GRID and 0 <= vy < GRID:
+            if 0 <= vx < self.GRID and 0 <= vy < self.GRID:
                 grid[vy][vx] = T.bold(T.red('▓'))
 
-        # Bots
         bot_colors = ["96", "95", "94"]
         for i, bot in enumerate(self.bots):
-            if bot.alive and 0 <= bot.x < GRID and 0 <= bot.y < GRID:
+            if bot.alive and 0 <= bot.x < self.GRID and 0 <= bot.y < self.GRID:
                 grid[bot.y][bot.x] = f"\033[{bot_colors[i%3]}m○\033[0m"
-            elif not bot.alive and 0 <= bot.x < GRID and 0 <= bot.y < GRID:
+            elif not bot.alive and 0 <= bot.x < self.GRID and 0 <= bot.y < self.GRID:
                 grid[bot.y][bot.x] = T.gray('×')
 
-        # Spieler
-        if self.alive and 0 <= self.px < GRID and 0 <= self.py < GRID:
+        if self.alive and 0 <= self.px < self.GRID and 0 <= self.py < self.GRID:
             grid[self.py][self.px] = T.bold(T.green('◉'))
 
-        print(T.gray("  ┌" + "──" * GRID + "┐"))
+        # Kompaktes Grid — kein Leerzeichen zwischen Zellen
+        print(T.gray(" ┌" + "─" * (GRID*2) + "┐"))
         for row in grid:
-            line = T.gray("  │")
+            line = T.gray(" │")
             for cell in row:
                 line += cell + " "
-            line += T.gray("│")
+            line = line.rstrip(" ") + T.gray("│")
             print(line)
-        print(T.gray("  └" + "──" * GRID + "┘"))
-        print(f"  {T.green('◉')} Du  {T.cyan('○')} Bot  {T.yellow('◈')} Signal  {T.red('▓')} VOID  {T.gray('·')} Leer")
+        print(T.gray(" └" + "─" * (GRID*2) + "┘"))
+        print(f" {T.green('◉')}Du {T.cyan('○')}Bot {T.yellow('◈')}Sig {T.red('▓')}VOID")
 
     def _draw_bots(self):
-        print(T.gray("  ── FRAGMENTE ──────────────────────────"))
-        for bot in self.bots:
-            if bot.alive:
-                bar = self._bar(bot.score / max(1, self.score + bot.score + 1), 8, "96", "90")
-                print(f"  {T.cyan('●')} {bot.name} ({bot.personality[:3]})  {T.gray('◈ '+str(bot.score))}  {bar}")
-            else:
-                print(f"  {T.gray('×')} {T.dim(bot.name)} {T.gray('[verschluckt]')}")
+        alive = [b for b in self.bots if b.alive]
+        dead  = [b for b in self.bots if not b.alive]
+        parts = []
+        for b in alive:
+            parts.append(f"{T.cyan('●')}{b.name[:5]} {T.gray(str(b.score))}")
+        for b in dead:
+            parts.append(T.gray(f"×{b.name[:5]}"))
+        print(" " + "  ".join(parts))
 
     def _draw_messages(self):
         if not self.messages:
             return
-        print(T.gray("  ── LOG ──────────────────────────────────"))
-        for ts, msg, style in self.messages[-5:]:
-            prefix = T.dim(ts) + " "
+        print(T.gray(" ─────────────────────────────"))
+        for ts, msg, style in self.messages[-3:]:
+            short_ts = ts[6:]  # nur HH:MM:SS → MM:SS
+            msg_cut = msg[:36]
             if style == "void":
-                print(f"  {prefix}{T.red(msg)}")
+                print(f" {T.dim(short_ts)} {T.red(msg_cut)}")
             elif style == "good":
-                print(f"  {prefix}{T.green(msg)}")
+                print(f" {T.dim(short_ts)} {T.green(msg_cut)}")
             elif style == "warn":
-                print(f"  {prefix}{T.yellow(msg)}")
+                print(f" {T.dim(short_ts)} {T.yellow(msg_cut)}")
             else:
-                print(f"  {prefix}{T.dim(msg)}")
+                print(f" {T.dim(short_ts)} {T.dim(msg_cut)}")
 
     def _draw_controls(self):
-        print(T.gray("  ── STEUERUNG ────────────────────────────"))
-        print(f"  {T.bold('WASD')} Bewegen  "
-              f"{T.bold('E')} Scan({self.energy}≥15)  "
-              f"{T.bold('R')} Rasten  "
-              f"{T.bold('H')} Highscores  "
-              f"{T.bold('Q')} Quit")
+        print(T.gray(" ─────────────────────────────"))
+        print(f" {T.bold('W')}↑ {T.bold('S')}↓ {T.bold('A')}← {T.bold('D')}→  "
+              f"{T.bold('E')}Scan  {T.bold('R')}Rast  "
+              f"{T.bold('H')}Top  {T.bold('Q')}Exit")
 
     def _show_highscores(self):
         T.clear()
@@ -519,6 +596,11 @@ class SoloGame:
 
     def _end_game(self, survived: bool):
         self.running = False
+        self.snd.stop_heartbeat()
+        if survived:
+            self.snd.play("signal_collect")
+        else:
+            self.snd.play("player_dead")
         self._save_score(self.score, survived, self.difficulty)
         T.clear()
         print()

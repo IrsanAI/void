@@ -1,1 +1,325 @@
-<!DOCTYPE html><html lang="en-US"><head><title>Just a moment...</title><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=Edge"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1"><style>*{box-sizing:border-box;margin:0;padding:0}html{line-height:1.15;-webkit-text-size-adjust:100%;color:#313131;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji"}body{display:flex;flex-direction:column;height:100vh;min-height:100vh}.main-content{margin:8rem auto;padding-left:1.5rem;max-width:60rem}@media (width <= 720px){.main-content{margin-top:4rem}}#challenge-error-text{background-image:url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgZmlsbD0ibm9uZSI+PHBhdGggZmlsbD0iI0IyMEYwMyIgZD0iTTE2IDNhMTMgMTMgMCAxIDAgMTMgMTNBMTMuMDE1IDEzLjAxNSAwIDAgMCAxNiAzbTAgMjRhMTEgMTEgMCAxIDEgMTEtMTEgMTEuMDEgMTEuMDEgMCAwIDEtMTEgMTEiLz48cGF0aCBmaWxsPSIjQjIwRjAzIiBkPSJNMTcuMDM4IDE4LjYxNUgxNC44N0wxNC41NjMgOS41aDIuNzgzem0tMS4wODQgMS40MjdxLjY2IDAgMS4wNTcuMzg4LjQwNy4zODkuNDA3Ljk5NCAwIC41OTYtLjQwNy45ODQtLjM5Ny4zOS0xLjA1Ny4zODktLjY1IDAtMS4wNTYtLjM4OS0uMzk4LS4zODktLjM5OC0uOTg0IDAtLjU5Ny4zOTgtLjk4NS40MDYtLjM5NyAxLjA1Ni0uMzk3Ii8+PC9zdmc+");background-repeat:no-repeat;background-size:contain;padding-left:34px}</style><meta http-equiv="refresh" content="360"></head><body><div class="main-wrapper" role="main"><div class="main-content"><noscript><div class="h2"><span id="challenge-error-text">Enable JavaScript and cookies to continue</span></div></noscript></div></div><script>(function(){window._cf_chl_opt = {cvId: '3',cZone: 'claude.ai',cType: 'managed',cRay: '9d7d48e32d9562ef',cH: 'Pevk834st.5sB8qDsBBuYykIEobOBYHTBS.hRdwaCbw-1772757371-1.2.1.1-VLAs__Fela2BHWgaJ3NItCqe1B3R0NLOKFxChcUgpRqa5VRmP8E1yTLCAGKPhXyN',cUPMDTk:"\/?__cf_chl_tk=_76rMhT9uSmywsWpPYqULeKg9naUT3TqMnpskPi0seI-1772757371-1.0.1.1-Ct455.TztH.kAQ.knl5x.LQDYZd0ro8ixBSe5JuuJBE",cFPWv: 'g',cITimeS: '1772757371',cTplC:0,cTplV:5,cTplB: '0',fa:"\/?__cf_chl_f_tk=_76rMhT9uSmywsWpPYqULeKg9naUT3TqMnpskPi0seI-1772757371-1.0.1.1-Ct455.TztH.kAQ.knl5x.LQDYZd0ro8ixBSe5JuuJBE",md: 'e9cadRopAvTRfMZ1eN2NusDIGZZEIsyPrWsH1iPV.yo-1772757371-1.2.1.1-DYkI1WilzyP66KqHwV7hACgba1oqYMgM1.hVWBG6R0nWddTCRFFNOlE99qGs2ZOIUN3ZOoqlWuWsoJFzLaXxnaUX.gTKl5IwEEHaUpxbKuN_WzJsMBQN8KKF1zE6IYzMZSOm003m.aLfi_j2MjA1Rom8AVOCxlTjRC5J0L2D_9tAWvTYJgoXCOC52OMvNntsXNlLZU8cmCdoB.P4WiParTokfH9D3YnQPIo3CdHVC8iEjLdakCs0tcOH6ptrgcJ0tJKF8HqfL3l20Ynj3eoomQJhUAooPlLrB8sjZm7jruN0fh..7g624KKdnvgvG.aPxyMl_Bn_GdRudFUIjGlJdiEXUJM8hA1ACmn7QZT51J1IrI7XdKArOaWC6x.1EyanzWvG45xlUmcUXGNl0zDLWxyioslqS6Salxd9mG6HZ4o90NmEaS6e75vGQAtKLNRYFk.6sD.Sts7X.IsXqca0bdUpgcALwaqDVOhoAIiV2OHXRf3toI.h04dmL60leajvguLg8IC9TfwSCLfG7EXGMXJbQqkVLTM_031K1ZVda6eknduzLQYJVt9VQdQSrqDizVkbyVF.PX4xCGnbtnwaJ49nt.VRV27yMiildcRUr27CcOK3_yApEkEejK8x.XQpd_v_m_M6SEIk7nIXxEXibsJ.clwAOcBbCNCphrCNlh018LYB1RQ9ylbGG6JxXYPLhPfbkhngWPKaJ3Z7x0X1vpsgi3_KQqrzYmMYJKF4IFIxPYtC.lOfNDd7Zcel7GnCMJHUJGmjTm6_ooIkZqMpYEczVhMZ5MXBkpfkGMIi5Nbip4dZzEal4v6XbyxdlDJwrOkViZeiyZ8PtMCbMW.ecdL4d6Ijs8jLuukvXf.batQO1IZy_CPHoyCADbsc1b8u0AJ0CurMwYkvQvv2V4GxYb4vl9YunpfiXsNp.0LcK1A2zVkIupmyhD5YLhEOozkmD5gB.GN8b6xZFflUZUPdqFW2JvY4B2SYm59QNPIApc8',mdrd: '3CC0tRrj.wwZAWZ6UR3mOLPqGJzL6Jhk91g_zF3qcpg-1772757371-1.2.1.1-O2RnQGQnpwQ9o3YrdltxD7E452KLoW4q5gP1YjbvntvYqDTC5OTfkQgVSQJLp60pSJBYfcnASpR9saOPybg7vMsZXy9KTPJp3ByT7E_ENgqwVJX3GXkv_XWJZ.QQuHJ_Gc1fOIruHxGZ_dbTu9qBUpoBrmmTPxfeUVQcjrC01P5BstTsYEWTkrHtpZh5Aj1zQWqtzrXRg0lOjGwx3UxPvmnUKxTg_Rr7Y8ziLCLYULiM7Gn6KsrB5NYeD_tRxlQYNTiK_uMfY4JkdNKj191mzaES9ARmgn34tKouZaADYDJRzsEn.EeAt1Fx3.o9CCI07oGob_yGUPKx46XKDff0nODYd_G5zG30SRdFic3g.wVf3BrLccavQktXSFfO3kxdDkwYRDbdiU_ggKHBpf9KxVYyLYtzBe.43Mm7Rk.T9lCD4m9w9JL71ct8qk8u153l7mvglSklaGh98lvmXYiTu.hoM0tZlKTSeHWP8SPixKpzVgn4pXsJeSqjylkhcdAlwDl.PIUlGeZ1TMUWsNbiNYvDdTmm_hCwaC1lNV3d1FamE_2KtNZT0lGCrhm5oQwGIuWou.w.bnOn39bP88Vpo36Qrh1Zo2wqL6CNlglYA_S.OWDDvcgdOG6YqnCN_q80kut7vwDBTIoP7ztvXypEPBYNm_jExG3KvWQNjnbaxVZUO9WO.IBwvMrXSTiOhOlA72_8j41OESPVDpg2J6CJ2.EYu01QcqIp3CryLvZ3I0BMlRsvRFrQ5i2OLGCD4zZjNHvu2WG_.st7q9XSJd_sxGemYJ8uTPM.gk9chXM2H8MDXDQhVMJE_nCLcLx0CwlVjSHTnY4A2iernmzqmDo.A9aaDv6pN8b42ZqPhGBFZsaNgVBE4QNYqEy6wPq0otBooCXWnlfMYuRS2lE4IudhpwJ6m_WRDOekbpxA3RTieuBZOEu0s0DsXQbqAVaoJX9uBC9ffqGsJbqodC2SrJ62vjf1n_UuZloE0sY1VZuTeNDwnzVS9NHK.GSMrADxw45TM4jJchrQC1q9CtTspgN2wI_1vXt_a0I.GWPVAoLqaDqb319.Wxf57QJ4WkSp9qYduHX6KVxEtkKqKoU0ctG2oC_rYY.WTj74YSuBeu3EgdEayzLvmdp30JTC1MPSat6.rbjsXP3rkVa6iNczG0K.DgXRZMrSJoIr00zyVB4EBotLRf6AvdyChBC0ozubDrsDhN9KGbHPsAmlsZIWKWpMltge7cSDm0Lh0cLM37Cqh3TNE8qNy37z3TeZNa4FR1lp99JuVx_8iicXtUv2sdB3W.Sc2TRYSJdM1rqgiJciuBZbUo9RLuc7R7iR4dtKYGNuzIifMQj8ZFFYwd2GBccla1EzWDvGw6qrkak9Jb5hqgkjmQ5sCsFAIOq.jJd4HLrdChskIIhYRkxfK5p0TcPOl5p3L7W4NjPLHDOT8swXPCAHh6Ag6umHX8xsbImqKh6mnQgkqPjUet3Y88R2.JFHDxx.p7YbE4nd9UHvwr.QNtE5eaneT1DQ9Y_dhxNJMNGdY4GpasHfgaAmOBDYlVUKJiKEubrBk1af_3c0RK266LuFaNHrmNqet4J9n3LQpsghORqSlOBK6DnnVlRxHX1ScXIMpoc7.A6QqgPggCYCe2ekt8CkNOxzE.FC_F2_QwSJ4com7gS4pU80_mzRS7E6HcLIiE3VIcpKa3FmvZSlWziTjeukrMf0pHcHVwcttnZDrJnSlFBTdYViq1q3E3d_PdShq8zZvt434ToYGXSmxfDAzYxwdRMngYsdMIUR2IX_aQqaU4GOLaPGbbk.vjDYtK5dX.J8h44IxxUrEkQ.gqwHqa11teZ28XfTlcMwiFtMck0KwO9osTctWQK9TNPK65NqxkGmfQWrSqmZ_MQ0YVayX5BIzvIym_3k465VMxLb1Jh9HSSSngzvohrIjU773oBeAnmhinpJ1sTSKQVZ26ioyMhf9DndRybo_aBH8DRQKQMAFDf1UnOgeNLgfLve5Cn6fnA4ndoT3pb45SAAIsX.gvudAgdiHf9uAqYin2Ww3G3235.M_IJhaMfeHU2.n2NDdkUVEOx2zNRsQDP9yyx8kLXyNROAHcaFiATr5ltgODRMeyKnzBlOAx4rC9I_aKHsUF5.DVtWX7zDw3Z5uBPk9R61hh_ZxwYxJtWneP1ME1GpGI71X12C7aGvWPjRNoQtefIo0PlXa645xXNvPocBlR0JABpXi6NYarip5HopQUCoQq0ZYSwvPohBYf.6su_IeYu.SW5T03100wYdbbKL7Z3SAP4JDJQW151grQBxRHZGKZcc0GnWq89i8Xa3Tf9YJEKzwGHTsND2KL8btlrgC9TMeEQbWyZvjAqnH3B98LjXQKi_1wLzkR_dnQBjI4lhvN1ZSikfs26d1mXlWYj5xGEzunWe.NFHwhZ4O4fbBfFCpsYXPwtQgEoTCMTzOiTx0thkw8I.OdirAqtMzzyXmxAMvWRZlHzTn8r3x8xlt9fjgwGp7eKsLzVh5JuobHNcPe7wXVwbpB1IfRctkn1yKc7dZO96jFayBZLZXnaVhsZEeAgmbSTlzoZSJ6vdXn2zL2SCB292e.wZlwk.1fXn4OKy7ZHGwk54CWf8G4ZiXXJKCOBTRsTBsmRZts31xxEwrGIU9BBpl5TjAuP0CiFWDxVPE1LgSRWpUKpXlJhSAdZR2XzfaKmXWNdhXpc8_S_PlGwwkCpwz_Hnz1bFIC5cVnEJ5SSf6dmUU.WtekTj_0zqGuhuCeX3hngN.HoN_URTnaU_mdU2klLqdBEN2pSScC3lRUJ8.7xmudNpjozPWBQATE6yrh6CQ0ik3bIEofNlNsEP_0RxJ93jmgdbeI2sYt7FwSgUVFLdZWSzoaVLro69WvmpPfXVj0DvBQGmbWVNS71fG2ZOg3ohlaTpkMdtS5OiJwUELTLPVAp0Cih0VWrCSW_1JbfNx2z0rffUuiTWmEj78GiJKooLDpki4CnQ9ZqxKRgV.p5iAOoW4Q7vVmO10ErMBhlINZ5uG_zhti2h6gzIlHDHl8uzNfoOgPkEYi.fn_.HgxBB_YPnoxfO5paxBO7OUhEAaDgRczDaqfH8SF6SsnmoR4eUGYNb202PqcNJSvC4QBg2EX.lwKQSywwO02DRY5a5KZQ5a_yrQGDF9vg3_nXM0UDEHNSRXGxZpXzi1X8iLrVK6bJjXM2MAibsmKfEazSMVzenQujbtmusJljryKocczXn2xmdjF4I5fRVDifzPR1MLvlwnOzHm1Hme0Bn9hmQl0dGfQTemCwiRy9t8ZhDZdvYt8UyFzZZu81XKAAkliYQPTf1NhovgAa.pHfXjqV3r4xu_Ij2EIomyZ1jgEu6RPt5lJz8xogNFOOQ4_O3ksUzrqYxlEJe4klGXNsmLo4m8xPjfljQaF4yhsxZln9zbGNXUBcoNEKwqoeeW8l5beDsksopR1weTxI.Kg2ckMrdSg2ojYpaiHIsjOzsuWDzGAEXA.JVD2MHtSAMpF6iksJElYtr4MYyoZi23nc5og98ksf.T_qHikz_oVSCrV0uzT8oKxcmv.iW4BLPl20hIgLFyoDsgBtJZTk3A6bufJNFpPxsNPhxCnkqexXidFhuO8gNZonk93R1DOMzzEXZwUcI8rMOERBkYOqa.7Es1B_y0rZ9iFX.VqTNLQIRycptlujK8Skg0q3rn1DPx7Tx_PNO5GuVhJDykukk9ORlSH25XylNnqs7BIf_wwOyjNT27LUkyLJeqhx5Nw3Zngq.8Jh4OF9jkUN161Wt1sPVciLAd0n.3BNoP9qW4KPXQB5C.RFuZauydYfJp_LFTN6oiJSUwPVDsMYHv26CcMR2qGrNV.uxL.tX41zc4euecpAbNKk6SnXPhcR9nZTl.pIuCA6kCU4WOhYmLyzquC9PHkJrbsK5fFnbOxhEAnqz2Sdnb5xvxummaAjyUd21VGXGyHN9Zhj.Q8kpw2JZ12wHgtUscpSm9bvLIMRDkC3ZIZDG2qh4mh5PmUBnAka1Mggk83W55kpRGaKdvlRTnimb6lGKlQAAENTHl3.XQEngI3p1GRFT_7gzpYjMU7o10aP_6cVZ2fbwRo9TKYmSGpdaZu6VFj15wZ_qq8HYmOCXZOZD67iwd53BtL97i10ngRJ6tigv1f_WRjTn0U.nWo3yY873XYR6nMwj_qRfGgSh1jAz_QNbytF1wQOedrqf0aBwgFRlRM2ZUj4kLciBCj5aAOHRjzS0tvg6AdeaOKbxBc52RqrXO0yQJY3gC.uHPvkmxLT53RljSkErvWgPdlw6v2hF446xSli6R2HgK3nVF2N61bywdUzzP_g',};var a = document.createElement('script');a.src = '/cdn-cgi/challenge-platform/h/g/orchestrate/chl_page/v1?ray=9d7d48e32d9562ef';window._cf_chl_opt.cOgUHash = location.hash === '' && location.href.indexOf('#') !== -1 ? '#' : location.hash;window._cf_chl_opt.cOgUQuery = location.search === '' && location.href.slice(0, location.href.length - window._cf_chl_opt.cOgUHash.length).indexOf('?') !== -1 ? '?' : location.search;if (window.history && window.history.replaceState) {var ogU = location.pathname + window._cf_chl_opt.cOgUQuery + window._cf_chl_opt.cOgUHash;history.replaceState(null, null,"\/?__cf_chl_rt_tk=_76rMhT9uSmywsWpPYqULeKg9naUT3TqMnpskPi0seI-1772757371-1.0.1.1-Ct455.TztH.kAQ.knl5x.LQDYZd0ro8ixBSe5JuuJBE"+ window._cf_chl_opt.cOgUHash);a.onload = function() {history.replaceState(null, null, ogU);}}document.getElementsByTagName('head')[0].appendChild(a);}());</script></body></html>
+#!/usr/bin/env python3
+"""
+VOID — Sound Engine
+Psychologisches Soundsystem für Termux.
+Nutzt termux-api (termux-tts-speak, termux-vibrate) wenn verfügbar.
+Generiert ANSI-Frequenz-Visualizer als immer verfügbaren Fallback.
+"""
+
+import subprocess
+import threading
+import time
+import random
+import os
+import sys
+
+# ── Verfügbarkeit prüfen ─────────────────────────────────────────
+def _cmd_exists(cmd):
+    try:
+        subprocess.run(["which", cmd], capture_output=True, check=True)
+        return True
+    except:
+        return False
+
+HAS_TERMUX_API   = _cmd_exists("termux-vibrate")
+HAS_BEEP         = _cmd_exists("beep")
+HAS_PLAY         = _cmd_exists("play")   # sox
+
+# ── Emotion → Sound-Profil ───────────────────────────────────────
+# Jede Emotion hat: vibrations, ascii_color, ascii_char, tts_msg
+SOUND_PROFILES = {
+    "paranoia": {
+        "color":   "\033[91m",   # Rot
+        "char":    "▓",
+        "vibrate": [80, 40, 80], # ms: an, pause, an
+        "label":   "PARANOIA",
+        "freq_pattern": [1, 0, 1, 0, 0, 1, 0, 0, 0, 1],  # unregelmäßig
+    },
+    "loneliness": {
+        "color":   "\033[94m",   # Blau
+        "char":    "░",
+        "vibrate": [200],        # langer einzelner Puls
+        "label":   "EINSAMKEIT",
+        "freq_pattern": [1, 0, 0, 0, 1, 0, 0, 0, 1, 0],  # langsam, weit
+    },
+    "rivalry": {
+        "color":   "\033[93m",   # Gelb
+        "char":    "█",
+        "vibrate": [50, 20, 50, 20, 150],  # schnell-schnell-lang
+        "label":   "RIVALITÄT",
+        "freq_pattern": [1, 1, 0, 1, 1, 0, 0, 1, 0, 1],  # aggressiv
+    },
+    "void_move": {
+        "color":   "\033[90m",   # Grau
+        "char":    "·",
+        "vibrate": [30],
+        "label":   "VOID",
+        "freq_pattern": [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    },
+    "signal_collect": {
+        "color":   "\033[92m",   # Grün
+        "char":    "◈",
+        "vibrate": [40, 20, 40, 20, 40],
+        "label":   "SIGNAL",
+        "freq_pattern": [1, 1, 1, 0, 1, 1, 0, 0, 1, 0],
+    },
+    "void_attack": {
+        "color":   "\033[91m",   # Rot
+        "char":    "█",
+        "vibrate": [300, 50, 300],  # starker Doppelschlag
+        "label":   "ANGRIFF",
+        "freq_pattern": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  # voll
+    },
+    "heartbeat": {
+        "color":   "\033[31m",   # Dunkelrot
+        "char":    "♥",
+        "vibrate": [60, 80, 80], # lub-dub
+        "label":   "HEARTBEAT",
+        "freq_pattern": [1, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+    },
+}
+
+# ── ASCII Frequenz-Visualizer ────────────────────────────────────
+class AsciiVisualizer:
+    """Rendert einen 10-Band Fake-Equalizer als ASCII-Art."""
+    WIDTH = 10
+    HEIGHT = 5
+
+    def __init__(self):
+        self._bars = [0.0] * self.WIDTH
+        self._target = [0.0] * self.WIDTH
+        self._lock = threading.Lock()
+        self._active = False
+        self._thread = None
+        self._profile = "paranoia"
+
+    def trigger(self, profile_name: str):
+        self._profile = profile_name
+        profile = SOUND_PROFILES.get(profile_name, SOUND_PROFILES["void_move"])
+        pattern = profile["freq_pattern"]
+        with self._lock:
+            for i, v in enumerate(pattern):
+                self._target[i] = v * (0.6 + random.random() * 0.4)
+
+    def start(self):
+        self._active = True
+        self._thread = threading.Thread(target=self._loop, daemon=True)
+        self._thread.start()
+
+    def stop(self):
+        self._active = False
+
+    def _loop(self):
+        while self._active:
+            with self._lock:
+                # Smooth bars toward target
+                for i in range(self.WIDTH):
+                    diff = self._target[i] - self._bars[i]
+                    self._bars[i] += diff * 0.35
+                    # Decay target
+                    self._target[i] *= 0.88
+
+            time.sleep(0.04)
+
+    def render(self) -> str:
+        """Gibt den Visualizer als String zurück (überschreibbar)."""
+        profile = SOUND_PROFILES.get(self._profile, SOUND_PROFILES["void_move"])
+        color = profile["color"]
+        reset = "\033[0m"
+        dim = "\033[2m"
+
+        with self._lock:
+            bars = self._bars[:]
+
+        lines = []
+        for row in range(self.HEIGHT, 0, -1):
+            threshold = row / self.HEIGHT
+            line = "  "
+            for bar in bars:
+                if bar >= threshold:
+                    line += color + "█" + reset + " "
+                elif bar >= threshold - (1/self.HEIGHT):
+                    line += dim + "▄" + reset + " "
+                else:
+                    line += dim + "·" + reset + " "
+            lines.append(line)
+
+        label = profile["label"]
+        lines.append(f"  {dim}{label:^20}{reset}")
+        return "\n".join(lines)
+
+
+# ── Vibration ────────────────────────────────────────────────────
+def _vibrate(pattern: list):
+    if not HAS_TERMUX_API:
+        return
+    def _do():
+        for i, ms in enumerate(pattern):
+            if i % 2 == 0:  # An-Phase
+                try:
+                    subprocess.run(
+                        ["termux-vibrate", "-d", str(ms)],
+                        capture_output=True, timeout=2
+                    )
+                except:
+                    pass
+            else:  # Pause
+                time.sleep(ms / 1000)
+    threading.Thread(target=_do, daemon=True).start()
+
+
+# ── Beep (falls sox/beep verfügbar) ─────────────────────────────
+def _beep(freq_hz: int, duration_ms: int, vol: float = 0.5):
+    if HAS_PLAY:
+        def _do():
+            try:
+                subprocess.run(
+                    ["play", "-n", "-q",
+                     "synth", f"{duration_ms/1000:.2f}",
+                     "sine", str(freq_hz),
+                     "vol", str(vol)],
+                    capture_output=True, timeout=3
+                )
+            except:
+                pass
+        threading.Thread(target=_do, daemon=True).start()
+    elif HAS_BEEP:
+        def _do():
+            try:
+                subprocess.run(
+                    ["beep", "-f", str(freq_hz), "-l", str(duration_ms)],
+                    capture_output=True, timeout=3
+                )
+            except:
+                pass
+        threading.Thread(target=_do, daemon=True).start()
+
+
+# ── Sound-Presets ────────────────────────────────────────────────
+SOUND_SEQUENCES = {
+    "heartbeat":       [(90,  80, 0.7),  (55,  120, 0.5)],
+    "signal_collect":  [(880, 60, 0.4),  (1046, 90, 0.5), (1318, 120, 0.6)],
+    "paranoia":        [(110, 200, 0.3), (98,  300, 0.25)],
+    "void_attack":     [(55,  400, 0.9), (41,  600, 0.8)],
+    "void_move":       [(65,  100, 0.2)],
+    "loneliness":      [(174, 500, 0.2), (164, 800, 0.15)],
+    "rivalry":         [(220, 80,  0.5), (220, 80, 0.5), (330, 160, 0.6)],
+    "scan":            [(1200, 30, 0.3), (900, 30, 0.25), (600, 80, 0.2)],
+    "player_dead":     [(110, 300, 0.6), (82,  500, 0.7), (55, 1000, 0.8)],
+    "game_start":      [(440, 100, 0.4), (554, 100, 0.5), (659, 200, 0.6)],
+}
+
+def _play_sequence(name: str):
+    seq = SOUND_SEQUENCES.get(name, [])
+    def _do():
+        for freq, dur, vol in seq:
+            _beep(freq, dur, vol)
+            time.sleep(dur / 1000 + 0.02)
+    if seq:
+        threading.Thread(target=_do, daemon=True).start()
+
+
+# ── Haupt-Sound-Interface ────────────────────────────────────────
+class VoidSound:
+    """
+    Zentrale Klasse für das VOID-Soundsystem.
+    Wird in void_solo.py und void_client.py instanziiert.
+    """
+    def __init__(self):
+        self.viz = AsciiVisualizer()
+        self.viz.start()
+        self._heartbeat_thread = None
+        self._hb_running = False
+        self._hb_bpm = 44
+        self.enabled = True
+
+    def play(self, event: str):
+        """Spiele einen Sound-Event ab."""
+        if not self.enabled:
+            return
+        self.viz.trigger(event)
+        _vibrate(SOUND_PROFILES.get(event, {}).get("vibrate", [50]))
+        _play_sequence(event)
+
+    def start_heartbeat(self, bpm: float = 44):
+        """Startet den pulsierenden Herzschlag-Loop."""
+        self._hb_bpm = bpm
+        self._hb_running = True
+        self._heartbeat_thread = threading.Thread(
+            target=self._hb_loop, daemon=True
+        )
+        self._heartbeat_thread.start()
+
+    def set_bpm(self, bpm: float):
+        self._hb_bpm = max(30, min(140, bpm))
+
+    def stop_heartbeat(self):
+        self._hb_running = False
+
+    def _hb_loop(self):
+        while self._hb_running:
+            self.play("heartbeat")
+            self.viz.trigger("heartbeat")
+            interval = 60 / self._hb_bpm
+            time.sleep(interval)
+
+    def get_visualizer(self) -> str:
+        """Gibt den aktuellen Visualizer-String zurück."""
+        return self.viz.render()
+
+    def stop(self):
+        self._hb_running = False
+        self.viz.stop()
+
+
+# ── Singleton ────────────────────────────────────────────────────
+_sound_instance = None
+
+def get_sound() -> VoidSound:
+    global _sound_instance
+    if _sound_instance is None:
+        _sound_instance = VoidSound()
+    return _sound_instance
+
+
+# ── Standalone Demo ──────────────────────────────────────────────
+if __name__ == "__main__":
+    print("\n\033[91m VOID Sound Engine — Demo\033[0m")
+    print(" Capabilities:")
+    print(f"   termux-api:  {'✓' if HAS_TERMUX_API else '✗ (pkg install termux-api)'}")
+    print(f"   sox (play):  {'✓' if HAS_PLAY else '✗ (pkg install sox)'}")
+    print(f"   beep:        {'✓' if HAS_BEEP else '✗'}")
+    print(f"   visualizer:  ✓ (immer verfügbar)")
+    print()
+
+    snd = get_sound()
+    events = ["heartbeat", "paranoia", "signal_collect", "void_attack", "loneliness", "rivalry"]
+
+    import tty, termios
+    def getch():
+        fd = sys.stdin.fileno()
+        old = termios.tcgetattr(fd)
+        try:
+            tty.setraw(fd)
+            return sys.stdin.read(1)
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old)
+
+    print(" Drücke 1-6 für Events, Q zum Beenden:\n")
+    for i, e in enumerate(events):
+        print(f"   [{i+1}] {e}")
+    print()
+
+    snd.start_heartbeat(48)
+
+    while True:
+        ch = getch()
+        if ch == 'q':
+            break
+        if ch.isdigit() and 1 <= int(ch) <= len(events):
+            ev = events[int(ch) - 1]
+            snd.play(ev)
+            print(f"\r  ▶ {ev:<20}", end="", flush=True)
+
+    snd.stop()
+    print("\n\033[90m Sound Engine beendet.\033[0m\n")
