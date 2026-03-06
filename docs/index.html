@@ -448,43 +448,54 @@
       .psy-grid { grid-template-columns: 1fr; }
       header { padding: 50px 0 40px; }
     }
-    /* ── Sound Button ── */
-    .sound-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 9px;
-      margin-top: 28px;
-      background: transparent;
+    /* ── Mute Button (fixed top-right) ── */
+    .mute-btn {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 1000;
+      background: rgba(10,10,12,0.85);
       border: 1px solid var(--border);
-      border-radius: 30px;
-      color: var(--muted);
-      font-family: var(--mono);
-      font-size: 12px;
-      letter-spacing: 0.15em;
-      padding: 10px 22px;
-      cursor: pointer;
-      transition: all 0.2s;
-      text-transform: uppercase;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .sound-btn:hover { border-color: var(--red); color: var(--red); }
-    .sound-btn.sound-on {
-      border-color: var(--red);
-      color: var(--red);
-      box-shadow: 0 0 18px rgba(224,85,85,0.18);
-      animation: pulse-btn 2s ease-in-out infinite;
-    }
-    @keyframes pulse-btn {
-      0%,100% { box-shadow: 0 0 18px rgba(224,85,85,0.18); }
-      50%      { box-shadow: 0 0 32px rgba(224,85,85,0.38); }
-    }
-    .sound-dot {
-      width: 7px; height: 7px;
       border-radius: 50%;
-      background: var(--muted);
-      transition: background 0.2s;
+      width: 42px;
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 18px;
+      transition: all 0.2s;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      -webkit-tap-highlight-color: transparent;
+      opacity: 0;
+      pointer-events: none;
     }
-    .sound-on .sound-dot { background: var(--red); animation: blink 1s step-end infinite; }
+    .mute-btn.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .mute-btn:hover {
+      border-color: var(--red);
+      box-shadow: 0 0 14px rgba(224,85,85,0.2);
+    }
+    .mute-btn.muted {
+      border-color: var(--dim);
+      opacity: 0.45;
+    }
+    .mute-btn.muted:hover { opacity: 1; }
+
+    /* ── Autoplay hint ── */
+    .sound-hint {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.15em;
+      margin-top: 14px;
+      opacity: 0.6;
+      animation: fadein 2s ease 1.5s both;
+    }
+    @keyframes fadein { from { opacity:0 } to { opacity:0.6 } }
 
   </style>
 </head>
@@ -500,12 +511,12 @@
   ╚═══╝   ╚═════╝ ╚═╝╚═════╝</pre>
     <p class="tagline">Psychologisches Survival<span class="cursor"></span></p>
     <p class="sub-tagline">IrsanAI · Terminal Game · Termux · Android</p>
-    <button class="sound-btn" id="sound-btn" onclick="toggleSound()">
-      <span class="sound-dot"></span>
-      ▶ VOID erwecken
-    </button>
+    <p class="sound-hint">// berühre die seite — die void erwacht</p>
   </div>
 </header>
+
+<!-- Fixed Mute Button -->
+<button class="mute-btn" id="mute-btn" onclick="toggleMute()" title="Sound ein/aus">🔊</button>
 
 <!-- ── INSTALL ────────────────────────────────────────────────── -->
 <section id="install">
@@ -1086,24 +1097,20 @@
   function startVoidAudio() {
     if (audioPlaying) return;
     audioPlaying = true;
-    getMaster._node = null;  // fresh master
+    getMaster._node = null;
 
     startDrone();
     startTension();
     startWhisper();
     playStinger();
 
-    // Delay heartbeat slightly — let drone establish first
     setTimeout(() => {
       if (audioPlaying) scheduleBeat();
     }, 1800);
 
-    // Update button
-    const btn = document.getElementById('sound-btn');
-    if (btn) {
-      btn.innerHTML = '⏹ VOID stummschalten';
-      btn.classList.add('sound-on');
-    }
+    // Show mute button
+    const btn = document.getElementById('mute-btn');
+    if (btn) { btn.classList.add('visible'); btn.textContent = '🔊'; }
   }
 
   function stopVoidAudio() {
@@ -1114,33 +1121,55 @@
     audioNodes.forEach(n => { try { n.stop(); } catch(e){} });
     audioNodes = [];
 
-    if (voidDroneGain) {
-      voidDroneGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.5);
-    }
-    if (tensionGain) {
-      tensionGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.5);
-    }
+    if (voidDroneGain) voidDroneGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.5);
+    if (tensionGain)   tensionGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.5);
 
     getMaster._node = null;
-
-    setTimeout(() => {
-      if (audioCtx) { audioCtx.close(); audioCtx = null; }
-    }, 600);
-
-    const btn = document.getElementById('sound-btn');
-    if (btn) {
-      btn.innerHTML = '▶ VOID erwecken';
-      btn.classList.remove('sound-on');
-    }
+    setTimeout(() => { if (audioCtx) { audioCtx.close(); audioCtx = null; } }, 600);
   }
 
-  function toggleSound() {
-    if (audioPlaying) {
-      stopVoidAudio();
+  // ── MUTE TOGGLE ───────────────────────────────────────────
+  let muted = false;
+  let masterGainNode = null;
+
+  function toggleMute() {
+    const btn = document.getElementById('mute-btn');
+    if (!audioCtx) return;
+
+    muted = !muted;
+
+    if (muted) {
+      // Fade out gracefully
+      if (voidDroneGain) voidDroneGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.4);
+      if (tensionGain)   tensionGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.4);
+      if (btn) { btn.textContent = '🔇'; btn.classList.add('muted'); }
     } else {
-      startVoidAudio();
+      // Fade back in
+      if (voidDroneGain) voidDroneGain.gain.setTargetAtTime(0.55, audioCtx.currentTime, 0.6);
+      if (tensionGain) {
+        const t = (currentBPM - 42) / 46;
+        tensionGain.gain.setTargetAtTime(t * 0.55, audioCtx.currentTime, 0.6);
+      }
+      if (btn) { btn.textContent = '🔊'; btn.classList.remove('muted'); }
     }
   }
+
+  // ── AUTOPLAY — fires on first interaction anywhere ────────
+  let _audioStarted = false;
+  function _tryAutoplay() {
+    if (_audioStarted) return;
+    _audioStarted = true;
+    document.removeEventListener('touchstart', _tryAutoplay);
+    document.removeEventListener('mousedown',  _tryAutoplay);
+    document.removeEventListener('scroll',     _tryAutoplay);
+    document.removeEventListener('keydown',    _tryAutoplay);
+    startVoidAudio();
+  }
+
+  document.addEventListener('touchstart', _tryAutoplay, { passive: true });
+  document.addEventListener('mousedown',  _tryAutoplay);
+  document.addEventListener('scroll',     _tryAutoplay, { passive: true });
+  document.addEventListener('keydown',    _tryAutoplay);
 
   // ── COPY FUNCTIONS ────────────────────────────────────────
   const CMD = "curl -fsSL https://raw.githubusercontent.com/IrsanAI/void/master/install/install.sh | bash";
