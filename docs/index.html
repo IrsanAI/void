@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VOID — IrsanAI Game</title>
+  <meta name="description" content="Das erste psychologische Multiplayer-Terminal-Game für Termux. Solo oder gegen Freunde." />
+  <meta property="og:title" content="VOID — IrsanAI Terminal Game" />
+  <meta property="og:description" content="Psychologisches Survival. Du gegen die VOID. Läuft auf jedem Android in Termux." />
+  <meta property="og:type" content="website" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --void:    #0a0a0c;
+      --surface: #111115;
+      --border:  #1e1e26;
+      --dim:     #2a2a35;
+      --text:    #c8c8d4;
+      --muted:   #5a5a6e;
+      --red:     #e05555;
+      --red-dim: #7a2020;
+      --green:   #4ecb6e;
+      --cyan:    #4ab8d4;
+      --yellow:  #d4a84a;
+      --mono:    'Share Tech Mono', monospace;
+      --sans:    'Rajdhani', sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--void);
+      color: var(--text);
+      font-family: var(--sans);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Scanlines overlay ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.08) 2px,
+        rgba(0,0,0,0.08) 4px
+      );
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    /* ── Noise grain ── */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 998;
+      opacity: 0.4;
+    }
+
+    /* ── Layout ── */
+    .container {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* ── Header / Hero ── */
+    header {
+      padding: 80px 0 60px;
+      text-align: center;
+      position: relative;
+    }
+
+    .ascii-logo {
+      font-family: var(--mono);
+      font-size: clamp(7px, 1.8vw, 13px);
+      line-height: 1.3;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+      white-space: pre;
+      animation: flicker 8s infinite;
+      display: inline-block;
+    }
+
+    @keyframes flicker {
+      0%,100% { opacity: 1; }
+      92%      { opacity: 1; }
+      93%      { opacity: 0.4; }
+      94%      { opacity: 1; }
+      96%      { opacity: 0.6; }
+      97%      { opacity: 1; }
+    }
+
+    .tagline {
+      font-family: var(--sans);
+      font-size: clamp(15px, 4vw, 22px);
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text);
+      margin-top: 28px;
+    }
+
+    .sub-tagline {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 10px;
+      letter-spacing: 0.08em;
+    }
+
+    /* ── Void cursor blink ── */
+    .cursor {
+      display: inline-block;
+      width: 10px;
+      height: 1em;
+      background: var(--red);
+      vertical-align: middle;
+      animation: blink 1.1s step-end infinite;
+      margin-left: 4px;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    /* ── Section ── */
+    section {
+      padding: 50px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .section-label {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--red);
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    h2 {
+      font-family: var(--sans);
+      font-size: clamp(20px, 5vw, 28px);
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: 0.08em;
+      margin-bottom: 14px;
+    }
+
+    p {
+      font-family: var(--sans);
+      font-size: 16px;
+      color: var(--muted);
+      line-height: 1.7;
+      font-weight: 400;
+    }
+
+    /* ── Install Box (the main CTA) ── */
+    .install-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 32px 28px;
+      margin: 32px 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .install-box::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--red), transparent 70%);
+    }
+
+    .install-label {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    .install-cmd {
+      font-family: var(--mono);
+      font-size: clamp(11px, 3vw, 14px);
+      color: var(--green);
+      background: #0d0d10;
+      border: 1px solid var(--dim);
+      border-radius: 5px;
+      padding: 14px 18px;
+      word-break: break-all;
+      line-height: 1.5;
+      cursor: text;
+      user-select: all;
+    }
+
+    .install-cmd .prompt { color: var(--muted); }
+    .install-cmd .cmd    { color: var(--cyan); }
+    .install-cmd .url    { color: var(--green); }
+
+    /* ── Copy button ── */
+    .copy-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 16px;
+      background: var(--red);
+      border: none;
+      border-radius: 5px;
+      color: #fff;
+      font-family: var(--sans);
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      padding: 13px 28px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: background 0.15s, transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .copy-btn:active { transform: scale(0.97); }
+    .copy-btn:hover  { background: #c04040; }
+    .copy-btn.copied { background: var(--green); color: #0a0a0c; }
+
+    .copy-icon { font-size: 16px; }
+
+    /* ── Step guide ── */
+    .steps {
+      counter-reset: steps;
+      margin-top: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .step {
+      display: flex;
+      gap: 18px;
+      align-items: flex-start;
+    }
+
+    .step-num {
+      counter-increment: steps;
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--dim);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--red);
+    }
+
+    .step-num::before { content: counter(steps); }
+
+    .step-text {
+      padding-top: 5px;
+      font-family: var(--sans);
+      font-size: 15px;
+      color: var(--text);
+      line-height: 1.6;
+      font-weight: 400;
+    }
+
+    .step-text strong {
+      color: var(--cyan);
+      font-weight: 700;
+    }
+
+    /* ── Feature grid ── */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 28px;
+    }
+
+    .feat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 20px 18px;
+      position: relative;
+    }
+
+    .feat-icon {
+      font-size: 22px;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .feat-title {
+      font-family: var(--sans);
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+    }
+
+    .feat-desc {
+      font-family: var(--sans);
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    /* ── Psy table ── */
+    .psy-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .psy-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--red-dim);
+      border-radius: 4px;
+      padding: 16px 14px;
+    }
+
+    .psy-card.green { border-left-color: #2a6640; }
+    .psy-card.yellow{ border-left-color: #6a5520; }
+    .psy-card.blue  { border-left-color: #1e4a6a; }
+
+    .psy-label {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .psy-text {
+      font-family: var(--sans);
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    /* ── Terminal preview ── */
+    .terminal {
+      background: #080809;
+      border: 1px solid var(--dim);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-top: 28px;
+      font-family: var(--mono);
+    }
+
+    .term-bar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot.r { background: #e05555; }
+    .dot.y { background: #d4a84a; }
+    .dot.g { background: #4ecb6e; }
+
+    .term-title {
+      font-size: 11px;
+      color: var(--muted);
+      margin-left: 8px;
+      letter-spacing: 0.1em;
+    }
+
+    .term-body {
+      padding: 18px 20px;
+      font-size: clamp(10px, 2.5vw, 13px);
+      line-height: 1.7;
+      color: #7a7a8a;
+      overflow-x: auto;
+    }
+
+    .term-body .g { color: #4ecb6e; }
+    .term-body .r { color: #e05555; }
+    .term-body .y { color: #d4a84a; }
+    .term-body .c { color: #4ab8d4; }
+    .term-body .w { color: #c8c8d4; }
+    .term-body .d { color: #3a3a48; }
+
+    /* ── Requirements ── */
+    .req-list {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .req-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-family: var(--sans);
+      font-size: 15px;
+      color: var(--text);
+    }
+
+    .req-check {
+      color: var(--green);
+      font-family: var(--mono);
+      font-size: 14px;
+    }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 40px 0;
+      text-align: center;
+    }
+
+    footer p {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+    }
+
+    footer a {
+      color: var(--cyan);
+      text-decoration: none;
+    }
+
+    /* ── Mobile ── */
+    @media (max-width: 520px) {
+      .psy-grid { grid-template-columns: 1fr; }
+      header { padding: 50px 0 40px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── HERO ───────────────────────────────────────────────────── -->
+<header>
+  <div class="container">
+    <pre class="ascii-logo">██╗   ██╗ ██████╗ ██╗██████╗
+██║   ██║██╔═══██╗██║██╔══██╗
+╚██╗ ██╔╝██║   ██║██║██║  ██║
+ ╚████╔╝ ╚██████╔╝██║██████╔╝
+  ╚═══╝   ╚═════╝ ╚═╝╚═════╝</pre>
+    <p class="tagline">Psychologisches Survival<span class="cursor"></span></p>
+    <p class="sub-tagline">IrsanAI · Terminal Game · Termux · Android</p>
+  </div>
+</header>
+
+<!-- ── INSTALL ────────────────────────────────────────────────── -->
+<section id="install">
+  <div class="container">
+    <p class="section-label">// installation</p>
+    <h2>In einer Zeile installieren</h2>
+    <p>Öffne <strong style="color:var(--cyan)">Termux</strong> auf deinem Android-Gerät und führe diesen Befehl aus.</p>
+
+    <div class="install-box">
+      <p class="install-label">// Termux — einfügen &amp; Enter drücken</p>
+      <div class="install-cmd" id="install-cmd">
+        <span class="prompt">$ </span><span class="cmd">curl</span> -fsSL <span class="url">https://raw.githubusercontent.com/IrsanAI/void/main/install/install.sh</span> | bash
+      </div>
+      <button class="copy-btn" id="copy-btn" onclick="copyCmd()">
+        <span class="copy-icon">⎘</span>
+        <span id="copy-label">Befehl kopieren</span>
+      </button>
+    </div>
+
+    <div class="section-label" style="margin-top:36px;">// schritt für schritt</div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num"></div>
+        <p class="step-text">
+          <strong>Termux installieren</strong> — kostenlos im
+          <a href="https://f-droid.org/en/packages/com.termux/" target="_blank" rel="noopener" style="color:var(--cyan)">F-Droid Store</a>
+          oder
+          <a href="https://play.google.com/store/apps/details?id=com.termux" target="_blank" rel="noopener" style="color:var(--cyan)">Google Play</a>.
+        </p>
+      </div>
+      <div class="step">
+        <div class="step-num"></div>
+        <p class="step-text"><strong>Termux öffnen</strong> und den kopierten Befehl einfügen. Mit <strong>Enter</strong> bestätigen.</p>
+      </div>
+      <div class="step">
+        <div class="step-num"></div>
+        <p class="step-text">Das Installer-Script läuft automatisch: <strong>Python &amp; git</strong> werden bei Bedarf installiert, das Repo wird geklont, ein <strong>Alias <code style="color:var(--cyan)">void</code></strong> wird angelegt.</p>
+      </div>
+      <div class="step">
+        <div class="step-num"></div>
+        <p class="step-text">Nach der Installation direkt spielen — oder später mit <strong><code style="color:var(--green)">void</code></strong> starten.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── TERMINAL PREVIEW ───────────────────────────────────────── -->
+<section>
+  <div class="container">
+    <p class="section-label">// terminal preview</p>
+    <h2>So sieht es aus</h2>
+
+    <div class="terminal">
+      <div class="term-bar">
+        <div class="dot r"></div>
+        <div class="dot y"></div>
+        <div class="dot g"></div>
+        <span class="term-title">Termux — VOID Solo</span>
+      </div>
+      <div class="term-body"><pre>
+ <span class="d">╔══ VOID SOLO ════════════════════════════╗</span>
+  <span class="r">AGGRESSION</span> <span class="r">████████</span><span class="d">░░</span>  <span class="y">⏱ 87s</span>  [<span class="y">NORMAL</span>]
+  <span class="c">⚡ ENERGIE</span> <span class="g">██████</span><span class="d">░░░░</span> 64   <span class="c">◈ 90</span> Punkte
+  <span class="r">VOID ▶</span> <span class="d">Deine letzte Bewegung war... vorhersehbar.</span>
+ <span class="d">╚═════════════════════════════════════════╝</span>
+
+  <span class="d">┌────────────────────────────┐</span>
+  <span class="d">│</span><span class="d">· · · · · · · · · · · · </span><span class="d">│</span>
+  <span class="d">│</span><span class="d">· · · </span><span class="y">◈</span><span class="d"> · · · · · · · · </span><span class="d">│</span>
+  <span class="d">│</span><span class="d">· · · · · </span><span class="g">◉</span><span class="d"> · · · · · · </span><span class="d">│</span>
+  <span class="d">│</span><span class="d">· · · · · · · </span><span class="c">○</span><span class="d"> · · · · </span><span class="d">│</span>
+  <span class="d">│</span><span class="d">· · · · · · · · · · </span><span class="r">▓</span><span class="d"> · </span><span class="d">│</span>
+  <span class="d">│</span><span class="d">· · · · · · · · · · · · </span><span class="d">│</span>
+  <span class="d">└────────────────────────────┘</span>
+  <span class="g">◉</span> Du  <span class="c">○</span> Bot  <span class="y">◈</span> Signal  <span class="r">▓</span> VOID
+
+  <span class="d">── LOG ──────────────────────────────────</span>
+  <span class="d">22:14:09</span> <span class="r">VOID: Ich lerne. Jede Sekunde.</span>
+  <span class="d">22:14:17</span> <span class="y">⚠ VOID-POSITION KURZ SICHTBAR!</span>
+  <span class="d">22:14:22</span> <span class="g">⚡ Signal absorbiert! +30 | Score: 90</span>
+
+  <span class="d">── STEUERUNG ───────────────────────────</span>
+  <span class="w">WASD</span> Bewegen  <span class="w">E</span> Scan  <span class="w">R</span> Rasten  <span class="w">Q</span> Quit</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FEATURES ───────────────────────────────────────────────── -->
+<section>
+  <div class="container">
+    <p class="section-label">// was VOID einzigartig macht</p>
+    <h2>Psychologie statt Grafik</h2>
+
+    <div class="features">
+      <div class="feat">
+        <span class="feat-icon">🧠</span>
+        <p class="feat-title">Lernende VOID-KI</p>
+        <p class="feat-desc">Die KI analysiert deine Bewegungsmuster in Echtzeit und wird jede Runde gezielter.</p>
+      </div>
+      <div class="feat">
+        <span class="feat-icon">👤</span>
+        <p class="feat-title">Solo + Multiplayer</p>
+        <p class="feat-desc">Allein gegen KI-Bots oder im WLAN mit Freunden — 2–6 Spieler.</p>
+      </div>
+      <div class="feat">
+        <span class="feat-icon">📡</span>
+        <p class="feat-title">Asymmetrisch</p>
+        <p class="feat-desc">Kein Spieler ist die VOID. Sie ist eine eigenständige KI mit steigender Aggression.</p>
+      </div>
+      <div class="feat">
+        <span class="feat-icon">📱</span>
+        <p class="feat-title">Nur Termux nötig</p>
+        <p class="feat-desc">Kein Store, kein APK, keine Permissions. Läuft auf jedem Android-Gerät.</p>
+      </div>
+      <div class="feat">
+        <span class="feat-icon">💾</span>
+        <p class="feat-title">Highscore-System</p>
+        <p class="feat-desc">Lokale Bestenliste. 3 Schwierigkeitsgrade. Wird zwischen Sessions gespeichert.</p>
+      </div>
+      <div class="feat">
+        <span class="feat-icon">🔓</span>
+        <p class="feat-title">Open Source</p>
+        <p class="feat-desc">Vollständig offen auf GitHub. Modifiziere, forke, erweitere.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── PSYCHOLOGIE ────────────────────────────────────────────── -->
+<section>
+  <div class="container">
+    <p class="section-label">// psychologische mechaniken</p>
+    <h2>Drei Emotionen. Ein Spiel.</h2>
+    <p>VOID ist kein Zufall-Game. Jede Mechanik ist auf eine spezifische psychologische Wirkung ausgelegt.</p>
+
+    <div class="psy-grid">
+      <div class="psy-card">
+        <p class="psy-label">Paranoia</p>
+        <p class="psy-text">Du weißt nie wo die VOID ist. Scans verraten sie kurz — aber enthüllen auch dich.</p>
+      </div>
+      <div class="psy-card green">
+        <p class="psy-label">Soziale Bindung</p>
+        <p class="psy-text">Notsignal senden hilft dem Team — aber gibt deine Position preis. Vertrauen kostet.</p>
+      </div>
+      <div class="psy-card yellow">
+        <p class="psy-label">Rivalität</p>
+        <p class="psy-text">Signale erhöhen deinen Score. Die VOID kommentiert, wer führt — und jagt den Besten.</p>
+      </div>
+      <div class="psy-card blue">
+        <p class="psy-label">Eskalation</p>
+        <p class="psy-text">Je länger du überlebst, desto aggressiver wird die VOID. Kein komfortables Endspiel.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── REQUIREMENTS ───────────────────────────────────────────── -->
+<section>
+  <div class="container">
+    <p class="section-label">// voraussetzungen</p>
+    <h2>Was du brauchst</h2>
+
+    <div class="req-list">
+      <div class="req-item">
+        <span class="req-check">✓</span>
+        <span>Android-Smartphone oder -Tablet</span>
+      </div>
+      <div class="req-item">
+        <span class="req-check">✓</span>
+        <span><strong style="color:var(--cyan)">Termux</strong> installiert (F-Droid oder Play Store — kostenlos)</span>
+      </div>
+      <div class="req-item">
+        <span class="req-check">✓</span>
+        <span>Internetverbindung für die Installation (~2 MB)</span>
+      </div>
+      <div class="req-item" style="color:var(--muted)">
+        <span style="color:var(--muted)">✗</span>
+        <span>Keine Root-Rechte nötig</span>
+      </div>
+      <div class="req-item" style="color:var(--muted)">
+        <span style="color:var(--muted)">✗</span>
+        <span>Keine externen Python-Pakete</span>
+      </div>
+      <div class="req-item" style="color:var(--muted)">
+        <span style="color:var(--muted)">✗</span>
+        <span>Kein App Store Account</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA REPEAT ─────────────────────────────────────────────── -->
+<section style="text-align:center; padding: 60px 0;">
+  <div class="container">
+    <p class="section-label" style="text-align:center;">// jetzt spielen</p>
+    <h2 style="margin-bottom:8px;">Die VOID wartet bereits.</h2>
+    <p style="margin-bottom:28px;">Öffne Termux. Kopiere. Enter.</p>
+    <div class="install-box" style="text-align:left; max-width:600px; margin:0 auto 24px;">
+      <div class="install-cmd" id="install-cmd-2">
+        <span class="prompt">$ </span><span class="cmd">curl</span> -fsSL <span class="url">https://raw.githubusercontent.com/IrsanAI/void/main/install/install.sh</span> | bash
+      </div>
+    </div>
+    <button class="copy-btn" id="copy-btn-2" onclick="copyCmd2()" style="margin:0 auto;">
+      <span class="copy-icon">⎘</span>
+      <span id="copy-label-2">Befehl kopieren</span>
+    </button>
+  </div>
+</section>
+
+<!-- ── FOOTER ─────────────────────────────────────────────────── -->
+<footer>
+  <div class="container">
+    <p>
+      <a href="https://github.com/IrsanAI/void" target="_blank" rel="noopener">github.com/IrsanAI/void</a>
+      &nbsp;·&nbsp;
+      IrsanAI · VOID v1.0
+      &nbsp;·&nbsp;
+      <a href="https://github.com/IrsanAI" target="_blank" rel="noopener">@IrsanAI</a>
+    </p>
+  </div>
+</footer>
+
+<script>
+  const CMD = "curl -fsSL https://raw.githubusercontent.com/IrsanAI/void/main/install/install.sh | bash";
+
+  function copyCmd() {
+    navigator.clipboard.writeText(CMD).then(() => {
+      const btn = document.getElementById('copy-btn');
+      const lbl = document.getElementById('copy-label');
+      btn.classList.add('copied');
+      lbl.textContent = 'Kopiert ✓';
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        lbl.textContent = 'Befehl kopieren';
+      }, 2500);
+    });
+  }
+
+  function copyCmd2() {
+    navigator.clipboard.writeText(CMD).then(() => {
+      const btn = document.getElementById('copy-btn-2');
+      const lbl = document.getElementById('copy-label-2');
+      btn.classList.add('copied');
+      lbl.textContent = 'Kopiert ✓';
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        lbl.textContent = 'Befehl kopieren';
+      }, 2500);
+    });
+  }
+</script>
+</body>
+</html>

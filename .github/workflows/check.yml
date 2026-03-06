@@ -1,0 +1,35 @@
+name: VOID — Python Check
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  syntax-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Syntax check all game files
+        run: |
+          echo "Checking void_launcher.py..."
+          python3 -m py_compile game/void_launcher.py && echo "✓ OK"
+
+          echo "Checking void_solo.py..."
+          python3 -m py_compile game/void_solo.py && echo "✓ OK"
+
+          echo "Checking void_server.py..."
+          python3 -m py_compile game/void_server.py && echo "✓ OK"
+
+          echo "Checking void_client.py..."
+          python3 -m py_compile game/void_client.py && echo "✓ OK"
+
+          echo ""
+          echo "All files passed syntax check."
