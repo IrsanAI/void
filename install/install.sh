@@ -156,7 +156,8 @@ gray "  ────────────────────────
 echo ""
 
 # ── Direkt starten? ─────────────────────────────────────────────
-read -r -p "  Jetzt spielen? [J/n] " choice
+echo -n "  Jetzt spielen? [J/n] "
+read choice
 case "$choice" in
   [nN]*)
     echo ""
