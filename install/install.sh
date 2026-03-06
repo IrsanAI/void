@@ -100,8 +100,19 @@ chmod +x "$INSTALL_DIR/game/void_solo.py"
 chmod +x "$INSTALL_DIR/game/void_server.py"
 chmod +x "$INSTALL_DIR/game/void_client.py"
 
-# ── [6/6] Alias + Widget einrichten ─────────────────────────────
-c "  [6/6] Alias & Home-Screen Widget einrichten..."
+# ── [6/6] Startbefehl + Alias + Widget einrichten ───────────────
+c "  [6/6] Startbefehl, Alias & Home-Screen Widget einrichten..."
+
+# Robuster globaler Startbefehl in Termux-PATH (funktioniert sofort,
+# auch wenn Aliases durch `curl | bash` nicht in die aktuelle Shell zurückkommen)
+PREFIX_BIN="${PREFIX:-/data/data/com.termux/files/usr}/bin"
+mkdir -p "$PREFIX_BIN"
+cat > "$PREFIX_BIN/void" << VOID_CMD
+#!/data/data/com.termux/files/usr/bin/bash
+python3 "$INSTALL_DIR/game/void_launcher.py" "\$@"
+VOID_CMD
+chmod +x "$PREFIX_BIN/void"
+g "        Befehl 'void' in PATH installiert ✓"
 
 ALIAS_LINE="alias void='python3 $INSTALL_DIR/game/void_launcher.py'"
 
@@ -186,13 +197,16 @@ echo ""
 # ── Direkt starten? ─────────────────────────────────────────────
 echo -n "  Jetzt spielen? [J/n] "
 read -r choice
-if [[ "$choice" =~ ^[nN] ]]; then
+case "$choice" in
+  n|N)
     echo ""
     gray "  ┌──────────────────────────────────────┐"
     echo -e "  │  ${BOLD}${CYAN}void${RESET}  ← einfach tippen & Enter      │"
     gray "  └──────────────────────────────────────┘"
     echo ""
-else
+    ;;
+  *)
     echo ""
     python3 "$INSTALL_DIR/game/void_launcher.py"
-fi
+    ;;
+esac
