@@ -29,6 +29,10 @@ curl -fsSL https://raw.githubusercontent.com/IrsanAI/void/main/install/install.s
 
 ### Apple iOS (iPhone/iPad)
 ```bash
+# In iSH (falls curl fehlt):
+apk add curl && curl -fsSL https://raw.githubusercontent.com/IrsanAI/void/main/install/install_ios.sh | sh
+
+# In a-Shell:
 curl -fsSL https://raw.githubusercontent.com/IrsanAI/void/main/install/install_ios.sh | sh
 ```
 **Voraussetzung:** [a-Shell](https://apps.apple.com/app/a-shell/id1473805438) oder [iSH](https://apps.apple.com/app/ish-shell/id1436902243) aus dem App Store.

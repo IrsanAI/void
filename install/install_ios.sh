@@ -11,6 +11,17 @@ echo "    ╚═══╝   ╚═════╝ ╚═╝╚═════╝
 echo "\033[0m"
 echo "VOID — iOS Edition wird installiert...\n"
 
+# Abhängigkeiten prüfen (iSH nutzt apk, a-Shell hat curl eingebaut)
+if ! command -v curl >/dev/null 2>&1; then
+    echo "curl nicht gefunden. Versuche Installation via apk (iSH)..."
+    if command -v apk >/dev/null 2>&1; then
+        apk add curl git python3
+    else
+        echo "Fehler: Paketmanager nicht gefunden. Bitte installiere curl manuell."
+        exit 1
+    fi
+fi
+
 # Verzeichnis erstellen
 mkdir -p ~/games/void
 cd ~/games/void
