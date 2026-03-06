@@ -30,6 +30,8 @@ def _cmd_exists(cmd):
 HAS_TERMUX_API   = _cmd_exists("termux-vibrate")
 HAS_BEEP         = _cmd_exists("beep")
 HAS_PLAY         = _cmd_exists("play")   # sox
+HAS_AFPLAY       = _cmd_exists("afplay") # iOS (a-Shell)
+HAS_SAY          = _cmd_exists("say")    # iOS (a-Shell)
 
 # ── Emotion → Sound-Profil (erweitert) ───────────────────────────
 SOUND_PROFILES = {
@@ -194,7 +196,13 @@ class AsciiVisualizer:
 
 # ── Vibration ────────────────────────────────────────────────────
 def _vibrate(pattern: list):
+    # iOS a-Shell Fallback (cvibrate)
     if not HAS_TERMUX_API:
+        if _cmd_exists("cvibrate"):
+            try:
+                subprocess.run(["cvibrate"], capture_output=True, timeout=1)
+            except:
+                pass
         return
     def _do():
         for i, ms in enumerate(pattern):
@@ -236,6 +244,19 @@ def _vibrate_stereo(intensity: float, direction: str = "center"):
 
 # ── Beep (falls sox/beep verfügbar) ─────────────────────────────
 def _beep(freq_hz: int, duration_ms: int, vol: float = 0.5):
+    # iOS a-Shell Fallback (say oder afplay)
+    if not HAS_PLAY and not HAS_BEEP:
+        if HAS_SAY and freq_hz < 200: # Tiefe Töne als "Grollen" via TTS
+            def _do_say():
+                try:
+                    subprocess.run(["say", "void"], capture_output=True, timeout=1)
+                except: pass
+            threading.Thread(target=_do_say, daemon=True).start()
+            return
+        elif HAS_AFPLAY:
+            # Hier könnte man System-Sounds nutzen, falls Pfade bekannt sind
+            pass
+
     if HAS_PLAY:
         def _do():
             try:

@@ -8,28 +8,46 @@
   ╚═══╝   ╚═════╝ ╚═╝╚═════╝
 ```
 
-> Das erste psychologische Multiplayer-Terminal-Game für Termux auf Android.
+> Das erste psychologische Multiplayer-Terminal-Game für Android (Termux) und iOS (a-Shell/iSH).
 
-[![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20Termux-brightgreen?style=flat-square)](https://termux.dev)
+[![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20iOS-brightgreen?style=flat-square)](https://github.com/IrsanAI/void)
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue?style=flat-square)](https://python.org)
 [![License](https://img.shields.io/badge/License-MIT-gray?style=flat-square)](LICENSE)
 [![IrsanAI](https://img.shields.io/badge/by-IrsanAI-red?style=flat-square)](https://github.com/IrsanAI)
 
 ---
 
-## Installation (eine Zeile, in Termux)
+## 📱 Installation
 
+Wähle dein Betriebssystem für die Ein-Zeilen-Installation:
+
+### Android (Termux)
 ```bash
 curl -fsSL https://raw.githubusercontent.com/IrsanAI/void/main/install/install.sh | bash
 ```
+**Voraussetzung:** [Termux](https://f-droid.org/en/packages/com.termux/) aus dem F-Droid Store.
 
-**Voraussetzung:** [Termux](https://f-droid.org/en/packages/com.termux/) auf Android. Das war's.
+### Apple iOS (iPhone/iPad)
+```bash
+curl -fsSL https://raw.githubusercontent.com/IrsanAI/void/main/install/install_ios.sh | sh
+```
+**Voraussetzung:** [a-Shell](https://apps.apple.com/app/a-shell/id1473805438) oder [iSH](https://apps.apple.com/app/ish-shell/id1436902243) aus dem App Store.
 
 → **[Zur Landing Page](https://irsanai.github.io/void)**
 
 ---
 
-## Was ist VOID?
+## 🍎 VOID auf iOS (Apple)
+
+VOID ist nun vollständig kompatibel mit Apple-Geräten. Dank der Unterstützung für **a-Shell** und **iSH** können iPhone- und iPad-Nutzer das Spiel direkt im Terminal erleben.
+
+*   **Sound-Support:** Nutzt `say` für psychologische Audio-Effekte und `afplay` für System-Sounds.
+*   **Haptik:** Unterstützt Vibration via `cvibrate` (in a-Shell verfügbar).
+*   **Performance:** Optimiert für die mobilen Prozessoren von Apple für ein flüssiges Terminal-Erlebnis.
+
+---
+
+## 🧠 Was ist VOID?
 
 VOID ist ein **asymmetrisches psychologisches Survivalspiel** im Terminal.
 
@@ -45,52 +63,39 @@ Du bist ein **Fragment** — unsichtbar, isoliert, gejagt. Die **VOID** ist kein
 
 ---
 
-## Spielmodi
+## 🎮 Spielmodi
 
-### Solo — `void_solo.py`
-- Du allein gegen die VOID-KI
-- **3 Bot-Fragmente** simulieren Mitspieler (Collector, Hunter, Coward)
-- **3 Schwierigkeitsgrade**: Einfach / Normal / Schwer
-- Lokale **Highscore-Speicherung** (`~/.void_scores.json`)
+### Solo — `void_solo_enhanced.py` (Empfohlen)
+- **Enhanced Edition:** Mit dynamischen Soundscapes, Stereo-Simulation und Glitch-UI.
+- Du allein gegen die VOID-KI + **3 Bot-Fragmente**.
+- **3 Schwierigkeitsgrade**: Einfach / Normal / Schwer.
+- Lokale **Highscore-Speicherung** (`~/.void_scores.json`).
 
 ### Multiplayer — `void_server.py` + `void_client.py`
-- **2–6 Spieler** im gleichen WLAN über TCP/IP
-- Server startet automatisch, wenn ≥2 Spieler verbunden
-- VOID-KI läuft serverseitig, lernt alle Spieler gleichzeitig
+- **2–6 Spieler** im gleichen WLAN über TCP/IP.
+- Server startet automatisch, wenn ≥2 Spieler verbunden.
+- VOID-KI läuft serverseitig, lernt alle Spieler gleichzeitig.
 
 ---
 
-## Starten
+## 🚀 Starten
 
 ```bash
 # Launcher (empfohlen) — wähle Solo, Client oder Server
 python3 ~/games/void/game/void_launcher.py
 
-# — oder nach Termux-Neustart —
+# — oder nach Neustart —
 void
 ```
 
-### Manuell
-
+### Manuell (Solo Enhanced)
 ```bash
-# Solo
-python3 ~/games/void/game/void_solo.py
-
-# Multiplayer — Server (ein Gerät)
-python3 ~/games/void/game/void_server.py
-
-# Multiplayer — Client (alle anderen)
-python3 ~/games/void/game/void_client.py 192.168.1.XX
-```
-
-**Deine WLAN-IP:**
-```bash
-ip addr | grep 'inet ' | grep wlan
+python3 ~/games/void/game/void_solo_enhanced.py
 ```
 
 ---
 
-## Steuerung
+## ⌨️ Steuerung
 
 | Taste | Aktion | Kosten |
 |---|---|---|
@@ -103,51 +108,21 @@ ip addr | grep 'inet ' | grep wlan
 
 ---
 
-## VOID-KI: Wie sie lernt
+## 🛠 Technisch
 
-Die VOID ist kein Random-Walker:
-
-1. **Mustererkennung** — analysiert Bewegungshistorie aller Fragmente
-2. **Zielpriorisierung** — isolierte Spieler werden bevorzugt angegriffen
-3. **Eskalation** — Aggression und Geschwindigkeit steigen laufend
-4. **Psychologische Nachrichten** — Paranoia, Einsamkeit, Rivalität — je nach Aggressionslevel
-5. **Kurzoffenbarung** — zeigt sich als Druckmittel, dann verschwindet sie wieder
+- **Pure Python 3** — keine externen Packages (Stdlib only).
+- **Cross-Platform:** Android (Termux) & iOS (a-Shell/iSH).
+- **Terminal-UI:** ANSI-Escape-Codes & Glitch-Rendering-Engine.
+- **Sound-Engine:** Adaptive Fallbacks für Termux-API, Sox, Beep und iOS-CLI.
 
 ---
 
-## Dateistruktur
+## 👨‍💻 Entwickelt von
 
-```
-void/
-├── game/
-│   ├── void_launcher.py   ← Startpunkt (Solo / Client / Server)
-│   ├── void_solo.py       ← Solo-Modus mit Bot-KI
-│   ├── void_client.py     ← Multiplayer-Client
-│   └── void_server.py     ← Multiplayer-Server
-├── install/
-│   └── install.sh         ← One-line Installer für Termux
-├── docs/
-│   └── index.html         ← GitHub Pages Landing Page
-└── README.md
-```
+**IrsanAI** — [github.com/IrsanAI](https://github.com/IrsanAI)
 
 ---
 
-## Technisch
-
-- **Pure Python 3** — keine externen Packages
-- **Stdlib only**: `socket`, `threading`, `tty`, `termios`, `json`
-- **Terminal-UI**: ANSI-Escape-Codes, kein curses nötig
-- **Persistenz**: JSON-Datei im Home-Verzeichnis
-
----
-
-## Entwickelt von
-
-**IrsanAI** — github.com/IrsanAI
-
----
-
-## Lizenz
+## 📄 Lizenz
 
 MIT — frei nutzbar, modifizierbar, weiterzugeben.
