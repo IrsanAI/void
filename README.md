@@ -42,6 +42,14 @@ python game/void_launcher.py
 ```
 **Hinweis:** Empfohlen ist **Windows Terminal** mit UTF-8-Font (z. B. Cascadia Mono oder JetBrains Mono), damit die Grid-Symbole sauber dargestellt werden.
 
+### Windows (PowerShell / Terminal)
+```powershell
+git clone https://github.com/IrsanAI/void.git
+cd void
+python game/void_launcher.py
+```
+**Hinweis:** Empfohlen ist **Windows Terminal** mit UTF-8-Font (z. B. Cascadia Mono oder JetBrains Mono), damit die Grid-Symbole sauber dargestellt werden.
+
 → **[Zur Landing Page](https://irsanai.github.io/void)**
 
 ---
