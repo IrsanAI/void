@@ -539,7 +539,7 @@
       <div class="install-box">
         <p class="install-label">// iOS Terminal — einfügen &amp; Enter drücken</p>
         <div class="install-cmd" id="ios-cmd">
-          <span class="prompt">$ </span><span class="cmd">apk add curl</span> && <span class="cmd">curl</span> -fsSL <span class="url">https://raw.githubusercontent.com/IrsanAI/void/master/install/install_ios.sh</span> | sh
+          <span class="prompt">$ </span><span class="cmd">curl</span> -fsSL <span class="url">https://raw.githubusercontent.com/IrsanAI/void/master/install/install_ios.sh</span> | sh
         </div>
         <button class="copy-btn" onclick="copyCmd('ios-cmd', this)">
           <span class="copy-icon">⎘</span>
@@ -547,7 +547,7 @@
         </button>
       </div>
       <p style="font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:12px;">
-        Hinweis für iSH: Falls <code style="color:var(--cyan)">curl</code> fehlt, wird es durch den Befehl automatisch installiert.
+        Hinweis: Der Installer erkennt iSH/a-Shell automatisch und installiert bei iSH die nötigen Basis-Pakete selbst.
       </p>
       <div class="steps">
         <div class="step"><div class="step-num"></div><p class="step-text"><strong>a-Shell</strong> oder <strong>iSH</strong> aus dem App Store laden.</p></div>

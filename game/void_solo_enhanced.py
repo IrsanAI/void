@@ -19,6 +19,7 @@ import json
 import shutil
 
 IS_WINDOWS = os.name == "nt"
+IS_MOBILE_TERM = bool(os.environ.get("TERMUX_VERSION") or os.environ.get("ISH_APP") or "ish" in os.environ.get("TERM", "").lower())
 if IS_WINDOWS:
     import msvcrt
 else:
@@ -82,7 +83,8 @@ class T:
 
     @staticmethod
     def redraw_start():
-        print("\033[H", end="", flush=False)
+        # Home + clear to end reduziert Layout-Artefakte bei Keyboard-Resize
+        print("\033[H\033[J", end="", flush=False)
 
     @staticmethod
     def use_alt_buffer(enable=True):
@@ -364,7 +366,8 @@ class SoloGame:
             pass
 
     def start_game(self):
-        T.use_alt_buffer(True)
+        if not IS_MOBILE_TERM:
+            T.use_alt_buffer(True)
         T.hide()
         self.snd.play("game_start")
         self.snd.start_heartbeat(44)
@@ -492,7 +495,8 @@ class SoloGame:
             if ch == 'q':
                 self.running = False
                 T.show()
-                T.use_alt_buffer(False)
+                if not IS_MOBILE_TERM:
+                    T.use_alt_buffer(False)
                 T.clear()
                 sys.exit(0)
 
@@ -584,7 +588,7 @@ class SoloGame:
         self._line(f"{T.red('A')}[{agg_bar}] {T.cyan('E')}[{en_bar}]{self.energy}")
         if self.last_void_msg:
             msg = self.last_void_msg[:50]
-            if self.L:
+            if self.L and not IS_MOBILE_TERM:
                 msg = self.L.glitch_text(msg)
             self._line(f"{T.red('▶')} {T.dim(msg)}")
         else:
@@ -640,7 +644,7 @@ class SoloGame:
         for ts, msg, style in shown:
             short = ts[-5:]
             cut = msg[:50]
-            if self.L:
+            if self.L and not IS_MOBILE_TERM:
                 cut = self.L.glitch_text(cut)
             if style == "void":   self._line(f"{T.dim(short)} {T.red(cut)}")
             elif style == "good": self._line(f"{T.dim(short)} {T.green(cut)}")
@@ -678,7 +682,8 @@ class SoloGame:
         self._save_score(self.score, survived, self.difficulty)
         
         T.show()
-        T.use_alt_buffer(False)
+        if not IS_MOBILE_TERM:
+            T.use_alt_buffer(False)
         T.clear()
         print()
         if survived:

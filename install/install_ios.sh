@@ -1,15 +1,28 @@
 #!/bin/sh
 # VOID — iOS Installer (a-Shell / iSH)
-# Installiert VOID auf Apple-Geräten.
+# Installiert VOID robust auf Apple-Geräten.
 
-echo "\033[1;31m"
-echo "  ██╗   ██╗ ██████╗ ██╗██████╗ "
-echo "  ██║   ██║██╔═══██╗██║██╔══██╗"
-echo "  ╚██╗ ██╔╝██║   ██║██║██║  ██║"
-echo "   ╚████╔╝ ╚██████╔╝██║██████╔╝"
-echo "    ╚═══╝   ╚═════╝ ╚═╝╚═════╝ "
-echo "\033[0m"
-echo "VOID — iOS Edition wird installiert...\n"
+set -e
+
+INSTALL_DIR="$HOME/games/void"
+REPO_URL="https://github.com/IrsanAI/void.git"
+
+printf '[1;31m
+'
+printf '  ██╗   ██╗ ██████╗ ██╗██████╗ 
+'
+printf '  ██║   ██║██╔═══██╗██║██╔══██╗
+'
+printf '  ╚██╗ ██╔╝██║   ██║██║██║  ██║
+'
+printf '   ╚████╔╝ ╚██████╔╝██║██████╔╝
+'
+printf '    ╚═══╝   ╚═════╝ ╚═╝╚═════╝ 
+'
+printf '[0m'
+printf 'VOID — iOS Edition wird installiert...
+
+'
 
 play_success_sound() {
     if command -v afplay >/dev/null 2>&1; then
@@ -17,17 +30,23 @@ play_success_sound() {
     elif command -v say >/dev/null 2>&1; then
         say "Void installation complete" >/dev/null 2>&1 || true
     else
-        printf "\a"
+        printf ""
     fi
 }
 
-# Abhängigkeiten prüfen (iSH nutzt apk, a-Shell hat curl eingebaut)
-if ! command -v curl >/dev/null 2>&1; then
-    echo "curl nicht gefunden. Versuche Installation via apk (iSH)..."
-    if command -v apk >/dev/null 2>&1; then
-        apk add curl git python3
-    else
-        echo "Fehler: Paketmanager nicht gefunden. Bitte installiere curl manuell."
+# iSH erkennen und Abhängigkeiten sauber installieren
+if command -v apk >/dev/null 2>&1; then
+    echo "iSH/Alpine erkannt → installiere Basis-Pakete (python3 git curl)..."
+    apk update >/dev/null 2>&1 || true
+    apk add python3 git curl >/dev/null 2>&1 || apk add python3 git curl
+else
+    # a-Shell: python3/curl oft vorhanden, trotzdem prüfen
+    if ! command -v curl >/dev/null 2>&1; then
+        echo "Fehler: curl fehlt. Bitte in a-Shell nachinstallieren."
+        exit 1
+    fi
+    if ! command -v python3 >/dev/null 2>&1; then
+        echo "Fehler: python3 fehlt. Bitte in deiner iOS-Shell installieren."
         exit 1
     fi
 fi
@@ -38,31 +57,69 @@ else
     echo "Hinweis: In dieser Shell sind ggf. nur eingeschränkte Audiofunktionen verfügbar."
 fi
 
-# Verzeichnis erstellen
-mkdir -p ~/games/void
-cd ~/games/void
+mkdir -p "$HOME/games"
 
-# Repository klonen (falls git vorhanden) oder Dateien laden
-if command -v git >/dev/null 2>&1; then
-    echo "Klone Repository via git..."
-    git clone https://github.com/IrsanAI/void.git .
+# Falls teilweise kaputte Alt-Installation existiert: Backup und neu klonen
+if [ -d "$INSTALL_DIR/.git" ]; then
+    echo "Bestehendes VOID-Repo gefunden → aktualisiere..."
+    git -C "$INSTALL_DIR" pull --ff-only || true
 else
-    echo "Git nicht gefunden. Lade Dateien manuell..."
-    # Fallback: curl einzelne Dateien (vereinfacht)
-    mkdir -p game
-    curl -L https://raw.githubusercontent.com/IrsanAI/void/master/game/void_launcher.py -o game/void_launcher.py
-    curl -L https://raw.githubusercontent.com/IrsanAI/void/master/game/void_solo_enhanced.py -o game/void_solo_enhanced.py
-    curl -L https://raw.githubusercontent.com/IrsanAI/void/master/game/void_sound_enhanced.py -o game/void_sound_enhanced.py
-    curl -L https://raw.githubusercontent.com/IrsanAI/void/master/game/void_layout_enhanced.py -o game/void_layout_enhanced.py
+    if [ -d "$INSTALL_DIR" ] && [ "$(ls -A "$INSTALL_DIR" 2>/dev/null)" != "" ]; then
+        BACKUP_DIR="$HOME/games/void_backup_$(date +%Y%m%d_%H%M%S)"
+        echo "Teilinstallation erkannt → verschiebe nach $BACKUP_DIR"
+        mv "$INSTALL_DIR" "$BACKUP_DIR"
+    fi
+    echo "Klone VOID Repository..."
+    git clone --depth=1 "$REPO_URL" "$INSTALL_DIR"
 fi
 
-# Alias erstellen (a-Shell nutzt 'alias')
-if [ -f "$HOME/.profile" ]; then
-    echo "alias void='python3 ~/games/void/game/void_launcher.py'" >> ~/.profile
-    echo "Alias 'void' zu .profile hinzugefügt."
+# Fallback falls branch 'master' statt 'main' lokal gewünscht ist
+if [ ! -f "$INSTALL_DIR/game/void_launcher.py" ]; then
+    echo "Fehler: Launcher-Datei fehlt nach Installation."
+    exit 1
+fi
+if [ ! -f "$INSTALL_DIR/game/void_server.py" ]; then
+    echo "Fehler: Server-Datei fehlt nach Installation (Abbruch)."
+    exit 1
 fi
 
-echo "\n\033[1;32mInstallation abgeschlossen!\033[0m"
+# Ausführbar machen
+chmod +x "$INSTALL_DIR"/game/*.py 2>/dev/null || true
+
+# Robuster Startbefehl (unabhängig von Alias und Shell-Neustart)
+mkdir -p "$HOME/bin"
+cat > "$HOME/bin/void" << EOF
+#!/bin/sh
+python3 "$INSTALL_DIR/game/void_launcher.py" "\$@"
+EOF
+chmod +x "$HOME/bin/void"
+
+# PATH dauerhaft ergänzen
+if [ -f "$HOME/.profile" ] && ! grep -q 'HOME/bin' "$HOME/.profile" 2>/dev/null; then
+    printf '
+export PATH="$HOME/bin:$PATH"
+' >> "$HOME/.profile"
+fi
+if [ -f "$HOME/.ashrc" ] && ! grep -q 'HOME/bin' "$HOME/.ashrc" 2>/dev/null; then
+    printf '
+export PATH="$HOME/bin:$PATH"
+' >> "$HOME/.ashrc"
+fi
+
+# Optionaler Alias
+if [ -f "$HOME/.profile" ] && ! grep -q "alias void=" "$HOME/.profile" 2>/dev/null; then
+    printf "alias void='python3 $INSTALL_DIR/game/void_launcher.py'
+" >> "$HOME/.profile"
+fi
+
+printf '
+[1;32mInstallation abgeschlossen![0m
+'
 play_success_sound
-echo "Starte das Spiel mit: \033[1mpython3 ~/games/void/game/void_launcher.py\033[0m"
-echo "Oder tippe einfach 'void' nach einem Neustart der App."
+printf 'Start:  %s
+' "python3 $INSTALL_DIR/game/void_launcher.py"
+printf 'Oder:   %s
+' "$HOME/bin/void"
+printf '
+Wichtig für iSH: Öffne die App neu oder führe aus: export PATH="$HOME/bin:$PATH"
+'

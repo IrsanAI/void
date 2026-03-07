@@ -30,6 +30,16 @@ def getch():
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 
+def _require_file(path, label):
+    if os.path.exists(path):
+        return True
+    clear()
+    print(r(f"\n  Fehler: {label} nicht gefunden."))
+    print(d("  Bitte Installation reparieren/neu ausführen."))
+    print(d(f"  Erwartet: {path}"))
+    input("\n  [Enter] zurück...")
+    return False
+
 def clear(): print("\033[2J\033[H", end="", flush=True)
 def b(s):    return f"\033[1m{s}\033[0m"
 def g(s):    return f"\033[92m{s}\033[0m"
@@ -68,7 +78,10 @@ def main():
     if ch == '1':
         clear()
         solo_target = "void_solo_enhanced.py" if os.path.exists(os.path.join(BASE, "void_solo_enhanced.py")) else "void_solo.py"
-        os.execv(sys.executable, [sys.executable, os.path.join(BASE, solo_target)])
+        solo_path = os.path.join(BASE, solo_target)
+        if not _require_file(solo_path, "Solo-Datei"):
+            return main()
+        os.execv(sys.executable, [sys.executable, solo_path])
 
     elif ch == '2':
         clear()
@@ -83,7 +96,10 @@ def main():
             ip = "127.0.0.1"
         if not ip:
             ip = "127.0.0.1"
-        os.execv(sys.executable, [sys.executable, os.path.join(BASE, "void_client.py"), ip])
+        client_path = os.path.join(BASE, "void_client.py")
+        if not _require_file(client_path, "Client-Datei"):
+            return main()
+        os.execv(sys.executable, [sys.executable, client_path, ip])
 
     elif ch == '3':
         clear()
@@ -106,7 +122,10 @@ def main():
         print(d("  Sie starten: python3 void_launcher.py → [2] → diese IP"))
         print()
         input("  [Enter] zum Starten des Servers...")
-        os.execv(sys.executable, [sys.executable, os.path.join(BASE, "void_server.py")])
+        server_path = os.path.join(BASE, "void_server.py")
+        if not _require_file(server_path, "Server-Datei"):
+            return main()
+        os.execv(sys.executable, [sys.executable, server_path])
 
     elif ch == 'q':
         clear()
