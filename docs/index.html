@@ -414,28 +414,13 @@
 
     /* ── Mute Button ── */
     .mute-btn {
-      position: fixed;
-      top: 16px;
-      right: 16px;
-      z-index: 1000;
-      background: rgba(10,10,12,0.85);
-      border: 1px solid var(--border);
       border-radius: 50%;
       width: 42px;
       height: 42px;
       display: flex;
       align-items: center;
       justify-content: center;
-      cursor: pointer;
       font-size: 18px;
-      transition: all 0.2s;
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      -webkit-tap-highlight-color: transparent;
-    }
-    .mute-btn:hover {
-      border-color: var(--red);
-      box-shadow: 0 0 14px rgba(224,85,85,0.2);
     }
 
     .sound-hint {
@@ -445,6 +430,54 @@
       letter-spacing: 0.15em;
       margin-top: 14px;
       opacity: 0.6;
+    }
+
+    .top-controls {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .lang-switch-btn,
+    .mute-btn {
+      background: rgba(10,10,12,0.85);
+      border: 1px solid var(--border);
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.2s;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .lang-switch-btn {
+      border-radius: 20px;
+      min-width: 48px;
+      height: 42px;
+      padding: 0 14px;
+      font-family: var(--mono);
+      font-size: 13px;
+      letter-spacing: 0.12em;
+    }
+
+    .lang-switch-btn:hover,
+    .mute-btn:hover {
+      border-color: var(--red);
+      box-shadow: 0 0 14px rgba(224,85,85,0.2);
+    }
+
+
+    .audio-status {
+      margin-top: 10px;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      opacity: 0.7;
     }
 
   </style>
@@ -459,12 +492,16 @@
  ╚████╔╝ ╚██████╔╝██║██████╔╝
   ╚═══╝   ╚═════╝ ╚═╝╚═════╝</pre>
     <p class="tagline">Psychologisches Survival<span class="cursor"></span></p>
-    <p class="sub-tagline">IrsanAI · Terminal Game · Android & iOS</p>
+    <p class="sub-tagline">IrsanAI · Terminal Game · Android · iOS · Windows</p>
     <p class="sound-hint">// berühre die seite — die void erwacht</p>
+    <p class="audio-status" id="audio-status">AUDIO: WARTET AUF INTERAKTION</p>
   </div>
 </header>
 
-<button class="mute-btn" id="mute-btn" onclick="toggleMute()">🔊</button>
+<div class="top-controls">
+  <button class="lang-switch-btn" id="lang-btn" onclick="toggleLang()">EN</button>
+  <button class="mute-btn" id="mute-btn" onclick="toggleMute()">🔊</button>
+</div>
 
 <section id="install">
   <div class="container">
@@ -472,9 +509,9 @@
     <h2>Wähle dein System</h2>
     
     <div class="tabs">
-      <button class="tab-btn active" onclick="showTab('android')">Android</button>
-      <button class="tab-btn" onclick="showTab('ios')">Apple iOS</button>
-      <button class="tab-btn" onclick="toggleLang()" id="lang-btn">EN</button>
+      <button class="tab-btn active" onclick="showTab('android', this)">Android</button>
+      <button class="tab-btn" onclick="showTab('ios', this)">Apple iOS</button>
+      <button class="tab-btn" onclick="showTab('windows', this)">Windows</button>
     </div>
 
     <!-- Android Tab -->
@@ -485,7 +522,7 @@
         <div class="install-cmd" id="android-cmd">
           <span class="prompt">$ </span><span class="cmd">curl</span> -fsSL <span class="url">https://raw.githubusercontent.com/IrsanAI/void/master/install/install.sh</span> | bash
         </div>
-        <button class="copy-btn" onclick="copyCmd('android-cmd')">
+        <button class="copy-btn" onclick="copyCmd('android-cmd', this)">
           <span class="copy-icon">⎘</span>
           <span>Befehl kopieren</span>
         </button>
@@ -502,19 +539,41 @@
       <div class="install-box">
         <p class="install-label">// iOS Terminal — einfügen &amp; Enter drücken</p>
         <div class="install-cmd" id="ios-cmd">
-          <span class="prompt">$ </span><span class="cmd">apk add curl</span> && <span class="cmd">curl</span> -fsSL <span class="url">https://raw.githubusercontent.com/IrsanAI/void/master/install/install_ios.sh</span> | sh
+          <span class="prompt">$ </span><span class="cmd">curl</span> -fsSL <span class="url">https://raw.githubusercontent.com/IrsanAI/void/master/install/install_ios.sh</span> | sh
         </div>
-        <button class="copy-btn" onclick="copyCmd('ios-cmd')">
+        <button class="copy-btn" onclick="copyCmd('ios-cmd', this)">
           <span class="copy-icon">⎘</span>
           <span>Befehl kopieren</span>
         </button>
       </div>
       <p style="font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:12px;">
-        Hinweis für iSH: Falls <code style="color:var(--cyan)">curl</code> fehlt, wird es durch den Befehl automatisch installiert.
+        Hinweis: Der Installer erkennt iSH/a-Shell automatisch und installiert bei iSH die nötigen Basis-Pakete selbst.
       </p>
       <div class="steps">
         <div class="step"><div class="step-num"></div><p class="step-text"><strong>a-Shell</strong> oder <strong>iSH</strong> aus dem App Store laden.</p></div>
         <div class="step"><div class="step-num"></div><p class="step-text">Befehl einfügen und mit <strong>Enter</strong> bestätigen.</p></div>
+      </div>
+    </div>
+
+    <!-- Windows Tab -->
+    <div id="windows" class="tab-content">
+      <p>Öffne <strong style="color:var(--cyan)">PowerShell</strong> oder <strong style="color:var(--cyan)">Windows Terminal</strong>.</p>
+      <div class="install-box">
+        <p class="install-label">// Windows — einfügen &amp; Enter drücken</p>
+        <div class="install-cmd" id="windows-cmd">
+          <span class="prompt">PS&gt; </span><span class="cmd">git clone</span> <span class="url">https://github.com/IrsanAI/void.git</span>; <span class="cmd">cd</span> void; <span class="cmd">python</span> game/void_launcher.py
+        </div>
+        <button class="copy-btn" onclick="copyCmd('windows-cmd', this)">
+          <span class="copy-icon">⎘</span>
+          <span>Befehl kopieren</span>
+        </button>
+      </div>
+      <p style="font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:12px;">
+        Empfehlung: Windows Terminal + UTF-8 Font (z. B. Cascadia Mono), damit die Symbole korrekt aussehen.
+      </p>
+      <div class="steps">
+        <div class="step"><div class="step-num"></div><p class="step-text"><strong>Python</strong> und <strong>Git</strong> auf Windows installieren.</p></div>
+        <div class="step"><div class="step-num"></div><p class="step-text">Befehl ausführen und im Launcher <strong>Solo</strong> oder <strong>Multiplayer</strong> wählen.</p></div>
       </div>
     </div>
 
@@ -556,7 +615,7 @@
     <div class="features">
       <div class="feat"><span class="feat-icon">🧠</span><p class="feat-title">Lernende KI</p><p class="feat-desc">Die VOID analysiert deine Muster in Echtzeit.</p></div>
       <div class="feat"><span class="feat-icon">🔊</span><p class="feat-title">Immersiver Sound</p><p class="feat-desc">Dynamische Soundscapes und Stereo-Simulation.</p></div>
-      <div class="feat"><span class="feat-icon">🍎</span><p class="feat-title">iOS Support</p><p class="feat-desc">Jetzt voll kompatibel mit Apple-Geräten.</p></div>
+      <div class="feat"><span class="feat-icon">🪟</span><p class="feat-title">Windows Support</p><p class="feat-desc">Direkter Start über PowerShell und Windows Terminal.</p></div>
     </div>
   </div>
 </section>
@@ -568,21 +627,18 @@
 </footer>
 
 <script>
-  function showTab(id) {
+  function showTab(id, btn) {
     document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(b => {
-        if(b.id !== 'lang-btn') b.classList.remove('active');
-    });
+    document.querySelectorAll('.tabs .tab-btn').forEach(b => b.classList.remove('active'));
     document.getElementById(id).classList.add('active');
-    event.currentTarget.classList.add('active');
+    if (btn) { btn.classList.add('active'); playTone(260, 0.05, "square", 0.025); }
   }
 
   let currentLang = 'de';
   function toggleLang() {
     currentLang = currentLang === 'de' ? 'en' : 'de';
     document.getElementById('lang-btn').innerText = currentLang === 'de' ? 'EN' : 'DE';
-    // Hier könnte man Texte dynamisch austauschen
-    alert("Sprache gewechselt zu: " + currentLang.toUpperCase());
+    playTone(300, 0.06, "triangle", 0.03);
   }
 
   // Glitch Effekt für das Banner
@@ -600,13 +656,15 @@
     }, 200);
   }
 
-  function copyCmd(id) {
-    const text = document.getElementById(id).innerText.replace('$ ', '');
+  function copyCmd(id, btn) {
+    const text = document.getElementById(id).innerText
+      .replace('$ ', '')
+      .replace('PS> ', '');
     navigator.clipboard.writeText(text);
-    const btn = event.currentTarget;
     const original = btn.innerHTML;
     btn.innerHTML = '<span>✓</span><span>Kopiert!</span>';
     btn.style.background = 'var(--green)';
+    playTone(520, 0.09, 'square', 0.04);
     setTimeout(() => {
       btn.innerHTML = original;
       btn.style.background = 'var(--red)';
@@ -614,10 +672,75 @@
   }
 
   let muted = false;
+  let audioCtx = null;
+  let masterGain = null;
+  let ambientInterval = null;
+
+  function setAudioStatus(text) {
+    const el = document.getElementById('audio-status');
+    if (el) el.innerText = text;
+  }
+
+  function playTone(freq = 220, duration = 0.08, type = 'sine', volume = 0.06) {
+    if (!audioCtx || !masterGain || muted) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    gain.gain.value = volume;
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(masterGain);
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+  }
+
+  async function initAudio() {
+    if (audioCtx) {
+      if (audioCtx.state === 'suspended') await audioCtx.resume();
+      return;
+    }
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) {
+      setAudioStatus('AUDIO: NICHT UNTERSTÜTZT');
+      return;
+    }
+    audioCtx = new AC();
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = 0.35;
+    masterGain.connect(audioCtx.destination);
+
+    const startAmbient = () => {
+      if (ambientInterval) return;
+      ambientInterval = setInterval(() => {
+        if (muted) return;
+        const base = 70 + Math.random() * 35;
+        playTone(base, 0.5, 'triangle', 0.018);
+        setTimeout(() => playTone(base * 1.5, 0.15, 'sine', 0.01), 120);
+      }, 2200);
+    };
+
+    startAmbient();
+    playTone(220, 0.1, 'square', 0.04);
+    setAudioStatus('AUDIO: AKTIV');
+  }
+
   function toggleMute() {
     muted = !muted;
     document.getElementById('mute-btn').innerText = muted ? '🔇' : '🔊';
+    if (!muted) {
+      initAudio();
+      setAudioStatus('AUDIO: AKTIV');
+      playTone(330, 0.07, 'sine', 0.04);
+    } else {
+      setAudioStatus('AUDIO: STUMM');
+    }
   }
+
+  window.addEventListener('pointerdown', () => {
+    initAudio();
+    playTone(180, 0.06, 'triangle', 0.03);
+  }, { once: true });
 </script>
 
 </body>
