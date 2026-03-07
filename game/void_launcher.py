@@ -4,6 +4,7 @@ VOID — Launcher
 Wähle: Solo / Multiplayer Client / Server starten
 """
 import sys, os
+import ipaddress
 
 IS_WINDOWS = os.name == "nt"
 
@@ -29,6 +30,26 @@ def getch():
         termios.tcsetattr(fd, termios.TCSADRAIN, old)
 
 BASE = os.path.dirname(os.path.abspath(__file__))
+
+
+def _server_reachability_hint(ip_text: str) -> str:
+    try:
+        ip = ipaddress.ip_address(ip_text)
+    except ValueError:
+        return d("  Hinweis: IP konnte nicht klassifiziert werden.")
+
+    if ip.is_loopback:
+        return y("  Achtung: Loopback-IP ist nur lokal erreichbar.")
+
+    # CGNAT-Bereich explizit
+    if ip in ipaddress.ip_network("100.64.0.0/10"):
+        return y("  Hinweis: CGNAT-IP erkannt. Direkter Internet-Join oft nicht möglich.")
+
+    if ip.is_private:
+        return d("  Private IP: Join klappt i.d.R. nur im gleichen LAN oder via VPN (Tailscale/Zerotier).")
+
+    return g("  Öffentliche IP erkannt. Prüfe trotzdem Firewall/Portfreigabe für 7777.")
+
 
 def _require_file(path, label):
     if os.path.exists(path):
@@ -117,6 +138,7 @@ def main():
 
         print(f"  {b('Deine IP:')} {g(my_ip)}")
         print(f"  {b('Port:')}     7777")
+        print(_server_reachability_hint(my_ip))
         print()
         print(d("  Teile diese IP mit deinen Mitspielern."))
         print(d("  Sie starten: python3 void_launcher.py → [2] → diese IP"))
