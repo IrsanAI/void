@@ -29,13 +29,18 @@ curl -fsSL https://raw.githubusercontent.com/IrsanAI/void/main/install/install.s
 
 ### Apple iOS (iPhone/iPad)
 ```bash
-# In iSH (falls curl fehlt):
-apk add curl && curl -fsSL https://raw.githubusercontent.com/IrsanAI/void/main/install/install_ios.sh | sh
-
-# In a-Shell:
 curl -fsSL https://raw.githubusercontent.com/IrsanAI/void/main/install/install_ios.sh | sh
 ```
-**Voraussetzung:** [a-Shell](https://apps.apple.com/app/a-shell/id1473805438) oder [iSH](https://apps.apple.com/app/ish-shell/id1436902243) aus dem App Store.
+**Voraussetzung:** [a-Shell](https://apps.apple.com/app/a-shell/id1473805438) oder [iSH](https://apps.apple.com/app/ish-shell/id1436902243) aus dem App Store.  
+Der Installer erkennt iSH/a-Shell automatisch und installiert bei iSH die benötigten Basis-Pakete selbst.
+
+### Windows (PowerShell / Terminal)
+```powershell
+git clone https://github.com/IrsanAI/void.git
+cd void
+python game/void_launcher.py
+```
+**Hinweis:** Empfohlen ist **Windows Terminal** mit UTF-8-Font (z. B. Cascadia Mono oder JetBrains Mono), damit die Grid-Symbole sauber dargestellt werden.
 
 → **[Zur Landing Page](https://irsanai.github.io/void)**
 
@@ -118,6 +123,61 @@ python3 ~/games/void/game/void_solo_enhanced.py
 - **Cross-Platform:** Android (Termux) & iOS (a-Shell/iSH).
 - **Terminal-UI:** ANSI-Escape-Codes & Glitch-Rendering-Engine.
 - **Sound-Engine:** Adaptive Fallbacks für Termux-API, Sox, Beep und iOS-CLI.
+
+### 🔊 Sound-Diagnose
+
+Falls du in Termux nur Vibrationen, aber keinen hörbaren Sound bekommst:
+
+```bash
+python3 ~/games/void/game/void_sound_diagnose.py
+```
+
+Typischer Fix in Termux:
+
+```bash
+pkg install sox termux-api
+```
+
+> Hinweis: Für `termux-vibrate` muss zusätzlich die **Termux:API App** installiert sein.
+
+---
+
+
+## 🌐 Multiplayer-Netzwerk (wichtig)
+
+### 🔐 Idee: Integriertes VPN + globale Keys/Nicknames
+
+Deine Idee ist technisch stark und absolut sinnvoll für zuverlässiges Internet-Multiplayer.
+
+**Kurzfazit:**
+- Ein "eingebautes OpenSSL/VPN pro Host" ist möglich, aber für mobile Shells (Termux/iSH/a-Shell) sehr komplex in Betrieb und UX.
+- Für reale Nutzung ist ein **Overlay-VPN** (z. B. WireGuard-basiert via Tailscale/Zerotier) meist stabiler als selbstgebautes Zertifikats-/NAT-Traversal-System.
+
+**Warum Verbindungsprobleme heute auftreten:**
+- Viele Mobilfunknetze nutzen CGNAT (keine direkte eingehende Verbindung auf dein Gerät).
+- Private IPs (`10.x`, `192.168.x`) sind ohne gemeinsames Netz/VPN nicht global erreichbar.
+
+**Pragmatischer Plan für VOID:**
+1. **Jetzt (einfach & robust):** VPN-Overlay empfehlen (Tailscale/Zerotier), dann Join via VPN-IP.
+2. **Nächster Schritt:** optionales "Secure-Lobby"-Backend (Matchmaking + Relay), damit direkte Portfreigaben entfallen.
+3. **Langfristig:** globale Identität
+   - eindeutige VOID-ID (Public Key als Identität),
+   - Nickname-Claim-Service (Name ist weltweit eindeutig),
+   - signierte Session-Tokens statt nur "IP + Key".
+
+**Wichtig:**
+- "IP + Key" alleine ersetzt kein vollständiges VPN/Relay-System.
+- Für globale Erreichbarkeit braucht es zusätzlich NAT-Traversal (STUN/TURN/Relay) oder ein dauerhaft erreichbares Relay.
+
+---
+
+Wenn beim Joinen `Operation timed out` erscheint, liegt es oft **nicht** am Code, sondern am Netzwerk (NAT/Carrier/Firewall).
+
+- `192.168.x.x`, `10.x.x.x`, `172.16-31.x.x` → private IP: funktioniert meist nur im selben WLAN/LAN.
+- Mobilfunk-IP ist häufig hinter **CGNAT**: direkte Verbindungen von außen sind dann blockiert.
+- Für Internet-Multiplayer empfohlen: gemeinsames VPN wie **Tailscale** oder **Zerotier**.
+
+Standard-Port ist `7777` (muss erreichbar sein).
 
 ---
 

@@ -10,6 +10,7 @@ import json
 import time
 import sys
 import os
+import ipaddress
 import tty
 import termios
 import select
@@ -317,6 +318,31 @@ def _get_term_width():
 
 
 # ── Netzwerk-Thread ──────────────────────────────────────────────
+
+
+def _network_hint_for_host(host: str, exc: Exception) -> str:
+    msg = str(exc).lower()
+    try:
+        ip = ipaddress.ip_address(host)
+    except ValueError:
+        return ("  Prüfe die IP/Domain. Falls ihr nicht im selben WLAN seid, "
+                "nutzt VPN (z. B. Tailscale/Zerotier) oder Port-Forwarding.")
+
+    if ip.is_loopback:
+        return "  127.0.0.1 funktioniert nur lokal auf demselben Gerät."
+
+    if ip.is_private or ip.is_link_local:
+        return ("  Ziel-IP ist privat (LAN/Carrier-NAT). Verbindung klappt meist nur im gleichen Netzwerk "
+                "oder über VPN-Tunnel (Tailscale/Zerotier).")
+
+    if ip in ipaddress.ip_network('100.64.0.0/10'):
+        return ("  Ziel-IP liegt in CGNAT-Bereich (100.64.0.0/10). "
+                "Direkte Internet-Verbindungen sind dort typischerweise blockiert.")
+
+    if 'timed out' in msg:
+        return "  Timeout: Server nicht erreichbar (Firewall, NAT oder falsches Netz)."
+    return "  Prüfe Port 7777, Firewall und ob der Server wirklich läuft."
+
 class NetworkHandler:
     def __init__(self, host, port):
         self.host = host
@@ -328,7 +354,9 @@ class NetworkHandler:
 
     def connect(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.settimeout(8.0)
         self.sock.connect((self.host, self.port))
+        self.sock.settimeout(None)
         self.connected = True
 
     def send(self, data: dict):
@@ -550,7 +578,9 @@ def main():
     except Exception as e:
         T.show_cursor()
         print(T.color(f"\n  FEHLER: Konnte nicht verbinden. ({e})", "91"))
-        print("  Stelle sicher, dass void_server.py läuft.\n")
+        print("  Stelle sicher, dass void_server.py läuft.")
+        print(_network_hint_for_host(host, e))
+        print("\n  Tipp: Für Internet-Multiplayer meist VPN (Tailscale/Zerotier) nutzen.\n")
         sys.exit(1)
 
     GS.phase = "connecting"
