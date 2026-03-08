@@ -32,6 +32,7 @@ HAS_BEEP         = _cmd_exists("beep")
 HAS_PLAY         = _cmd_exists("play")   # sox
 HAS_AFPLAY       = _cmd_exists("afplay") # iOS (a-Shell)
 HAS_SAY          = _cmd_exists("say")    # iOS (a-Shell)
+HAS_TERMUX_TTS   = _cmd_exists("termux-tts-speak")
 
 # ── Emotion → Sound-Profil (erweitert) ───────────────────────────
 SOUND_PROFILES = {
@@ -326,6 +327,19 @@ def _play_sequence(name: str):
 
 
 # ── Haupt-Sound-Interface (erweitert) ────────────────────────────
+
+
+def get_capabilities_snapshot() -> dict:
+    """Liefert verfügbare Audio-Backends (für Diagnose/Logging)."""
+    return {
+        "termux_api": HAS_TERMUX_API,
+        "termux_tts": HAS_TERMUX_TTS,
+        "sox_play": HAS_PLAY,
+        "beep": HAS_BEEP,
+        "afplay": HAS_AFPLAY,
+        "say": HAS_SAY,
+    }
+
 class VoidSound:
     """
     Erweiterte VOID Sound Engine mit Ambient-Soundscapes und Stereo-Effekten.
@@ -340,6 +354,7 @@ class VoidSound:
         self._ambient_thread = None
         self._ambient_running = False
         self._distance_to_void = float('inf')  # Für Stereo-Effekte
+        self._ambient_level = 0.10
 
     def play(self, event: str):
         """Spiele einen Sound-Event ab (mit erweiterten Effekten)."""
@@ -389,6 +404,33 @@ class VoidSound:
             self.viz.trigger("heartbeat")
             interval = 60 / self._hb_bpm
             time.sleep(interval)
+
+    def start_ambient(self, level: float = 0.10):
+        """Leichter Ambient-Untergrund, damit das Spiel nicht stumm wirkt."""
+        self._ambient_level = max(0.02, min(0.25, level))
+        if self._ambient_running:
+            return
+        self._ambient_running = True
+        self._ambient_thread = threading.Thread(target=self._ambient_loop, daemon=True)
+        self._ambient_thread.start()
+
+    def stop_ambient(self):
+        self._ambient_running = False
+
+    def _ambient_loop(self):
+        while self._ambient_running:
+            if self.enabled:
+                # tiefer ruhiger Grundton + leichte Schwankung
+                base = 60 + random.randint(0, 30)
+                _play_ambient(base, 420, self._ambient_level)
+                if HAS_TERMUX_TTS and not (HAS_PLAY or HAS_BEEP):
+                    # Letzter Fallback: sehr selten leiser TTS-Hinweis
+                    if random.random() < 0.04:
+                        try:
+                            subprocess.run(["termux-tts-speak", "void"], capture_output=True, timeout=2)
+                        except Exception:
+                            pass
+            time.sleep(2.4)
 
     def set_paranoia_level(self, level: float):
         """
