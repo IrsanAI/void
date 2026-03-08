@@ -50,6 +50,7 @@
 
 ## P3 — Dev/Quality
 
+- [x] KI-Architektur-Doku ergänzt (`AI_AGENT.md`) + Wartungshinweis im KI-Core.
 - [ ] Smoke-Test-Skript für Solo/Client/Server Startpfade.
 - [ ] Strukturierte Error-Codes im Client/Server (statt nur freie Texte).
 - [ ] Kleine Telemetrie-Option (opt-in) für Verbindungsfehler-Statistik.

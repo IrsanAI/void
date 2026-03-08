@@ -61,6 +61,10 @@ VOID_WHISPERS = [
 ]
 
 # ── VOID KI - Lernender Algorithmus ─────────────────────────────
+# AI-ARCHITEKTUR-BEGINN:
+# Wenn du den KI-Core unten (VoidAI) änderst, aktualisiere bitte
+#   1) AI_AGENT.md (Factsheet + nächste Schritte)
+#   2) README.md (AI/Gameplay-Dokumentation für Nutzer:innen)
 class VoidAI:
     def __init__(self):
         self.behavior_memory = {}   # player_id -> list of (x,y,action)

@@ -124,6 +124,12 @@ python3 ~/games/void/game/void_solo_enhanced.py
 - **Terminal-UI:** ANSI-Escape-Codes & Glitch-Rendering-Engine.
 - **Sound-Engine:** Adaptive Fallbacks für Termux-API, Sox, Beep und iOS-CLI.
 
+### 🤖 KI-Architektur (für Entwickler)
+
+- Der aktuelle KI-Core der Multiplayer-VOID liegt in `game/void_server.py` (Klasse `VoidAI`).
+- Das technische Factsheet und die geplanten KI-Erweiterungen stehen in `AI_AGENT.md`.
+- Bei Änderungen am KI-Core sollen README + `AI_AGENT.md` gemeinsam aktualisiert werden.
+
 ### 🔊 Sound-Diagnose
 
 Falls du in Termux nur Vibrationen, aber keinen hörbaren Sound bekommst:
