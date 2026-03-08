@@ -580,7 +580,8 @@ def main():
         print(T.color(f"\n  FEHLER: Konnte nicht verbinden. ({e})", "91"))
         print("  Stelle sicher, dass void_server.py läuft.")
         print(_network_hint_for_host(host, e))
-        print("\n  Tipp: Für Internet-Multiplayer meist VPN (Tailscale/Zerotier) nutzen.\n")
+        print("\n  Tipp: Für Internet-Multiplayer meist VPN (Tailscale/Zerotier) nutzen.")
+        print("  Optional: python3 ~/games/void/game/void_netcheck.py <IP>\n")
         sys.exit(1)
 
     GS.phase = "connecting"

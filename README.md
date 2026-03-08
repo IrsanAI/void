@@ -90,7 +90,7 @@ Du bist ein **Fragment** — unsichtbar, isoliert, gejagt. Die **VOID** ist kein
 ## 🚀 Starten
 
 ```bash
-# Launcher (empfohlen) — wähle Solo, Client oder Server
+# Launcher (empfohlen) — wähle Solo, Client, Server oder VPN/Netz-Check
 python3 ~/games/void/game/void_launcher.py
 
 # — oder nach Neustart —
@@ -178,6 +178,13 @@ Wenn beim Joinen `Operation timed out` erscheint, liegt es oft **nicht** am Code
 - Für Internet-Multiplayer empfohlen: gemeinsames VPN wie **Tailscale** oder **Zerotier**.
 
 Standard-Port ist `7777` (muss erreichbar sein).
+
+Schneller VPN/Port-Check:
+
+```bash
+python3 ~/games/void/game/void_netcheck.py 10.x.x.x
+```
+
 
 ---
 
