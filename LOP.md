@@ -16,7 +16,7 @@
 - [x] **Launcher VPN/Netz-Check Option** (`[4]`) mit klarer Checkliste eingebaut.
 - [x] **`void_netcheck.py`** erstellt (lokale IP, Tailscale-IP, Port-Check 7777).
 - [x] Client-Fehlertexte bei Timeout verbessert (NAT/CGNAT/VPN-Hinweise + Netcheck-Befehl).
-- [ ] **Relay-Prototyp v0.1** (Cloud/VPS): Host+Client verbinden outbound, Join per Lobby-Code.
+- [x] **Relay-Prototyp v0.1** (Cloud/VPS): Host+Client verbinden outbound, Join per Room-Code (`void_relay.py`).
 - [ ] Heartbeat/Keepalive & Auto-Reconnect für Relay-Verbindungen.
 - [ ] Minimales Matchmaking (Room erstellen/joinen) mit Code-Lebensdauer.
 
@@ -59,6 +59,6 @@
 
 ## Nächster Sprint (vereinbart)
 
-1. Relay-Prototyp (Room-Code) aufsetzen.
-2. Client/Server auf Relay optional umstellbar machen (Fallback: Direkt-IP).
-3. Kurzer End-to-End Testplan für Android ↔ iOS über Mobilfunk + VPN.
+1. Relay v0.1 stabilisieren (Retries, bessere Fehlermeldungen, optional mehrere Joiner/Rooms).
+2. Heartbeat/Keepalive + Auto-Reconnect für Relay-Verbindungen.
+3. Kurzer End-to-End Testplan für Android ↔ iOS über Mobilfunk + VPN + Relay.

@@ -341,7 +341,7 @@ def _network_hint_for_host(host: str, exc: Exception) -> str:
 
     if 'timed out' in msg:
         return "  Timeout: Server nicht erreichbar (Firewall, NAT oder falsches Netz)."
-    return "  Prüfe Port 7777, Firewall und ob der Server wirklich läuft."
+    return "  Prüfe Ziel-Port, Firewall und ob der Server wirklich läuft."
 
 class NetworkHandler:
     def __init__(self, host, port):
@@ -568,11 +568,19 @@ def main():
         raw = input().strip()
         host = raw if raw else "127.0.0.1"
 
+    if len(sys.argv) >= 3:
+        try:
+            port = int(sys.argv[2])
+        except ValueError:
+            port = 7777
+    else:
+        port = 7777
+
     T.hide_cursor()
 
-    print(T.color(f"\n  Verbinde mit {host}:{7777}...", "96"))
+    print(T.color(f"\n  Verbinde mit {host}:{port}...", "96"))
 
-    net = NetworkHandler(host, 7777)
+    net = NetworkHandler(host, port)
     try:
         net.connect()
     except Exception as e:

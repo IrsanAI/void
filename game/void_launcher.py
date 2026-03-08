@@ -105,6 +105,93 @@ BANNER = gray("""
    ╚████╔╝ ╚██████╔╝██║██████╔╝
     ╚═══╝   ╚═════╝ ╚═╝╚═════╝""")
 
+
+
+def _start_relay_mode():
+    relay_path = os.path.join(BASE, "void_relay.py")
+    client_path = os.path.join(BASE, "void_client.py")
+    server_path = os.path.join(BASE, "void_server.py")
+
+    if not _require_file(relay_path, "Relay-Datei"):
+        return
+
+    clear()
+    print(b("\n  RELAY BETA (Room-Code)"))
+    print(d("  [1] Host-Bridge + lokalen Server starten"))
+    print(d("  [2] Join-Bridge starten und lokal verbinden"))
+    print()
+    print("  Modus: ", end="", flush=True)
+    ch = getch()
+
+    if ch not in ('1', '2'):
+        return
+
+    clear()
+    print(b("\n  Relay-Parameter"))
+    print(d("  Relay-Host (z.B. VPS oder Tailscale-IP)"))
+    print("  Relay-Host: ", end="", flush=True)
+    print("\033[?25h", end="", flush=True)
+    relay_host = input().strip()
+    if not relay_host:
+        relay_host = "127.0.0.1"
+
+    print("  Relay-Port [8787]: ", end="", flush=True)
+    raw_port = input().strip()
+    try:
+        relay_port = int(raw_port) if raw_port else 8787
+    except ValueError:
+        relay_port = 8787
+
+    print("  Room-Code (z.B. VOID42): ", end="", flush=True)
+    room = input().strip().upper()
+    if not room:
+        room = "VOID42"
+
+    print("\033[?25l", end="", flush=True)
+
+    if ch == '1':
+        if not _require_file(server_path, "Server-Datei"):
+            return
+        cmd = [
+            sys.executable, relay_path, "host",
+            "--relay-host", relay_host,
+            "--relay-port", str(relay_port),
+            "--room", room,
+            "--target-host", "127.0.0.1",
+            "--target-port", "7777",
+        ]
+        subprocess.Popen(cmd, start_new_session=True)
+        clear()
+        print(g(f"\n  Relay-Host-Bridge gestartet (Room {room})."))
+        print(d("  Starte jetzt den lokalen VOID-Server ..."))
+        time.sleep(0.8)
+        os.execv(sys.executable, [sys.executable, server_path])
+
+    if ch == '2':
+        if not _require_file(client_path, "Client-Datei"):
+            return
+        local_port = 17777
+        cmd = [
+            sys.executable, relay_path, "join",
+            "--relay-host", relay_host,
+            "--relay-port", str(relay_port),
+            "--room", room,
+            "--listen-host", "127.0.0.1",
+            "--listen-port", str(local_port),
+        ]
+        proc = subprocess.Popen(cmd, start_new_session=True)
+        time.sleep(0.7)
+        if proc.poll() is not None:
+            clear()
+            print(r("\n  Relay-Join-Bridge konnte nicht gestartet werden."))
+            input("  [Enter] zurück...")
+            return
+        clear()
+        print(g(f"\n  Relay-Join-Bridge aktiv (Room {room})."))
+        print(d("  Verbinde Client jetzt gegen localhost-Tunnel ..."))
+        time.sleep(0.8)
+        os.execv(sys.executable, [sys.executable, client_path, "127.0.0.1", str(local_port)])
+
 def main():
     if IS_WINDOWS:
         os.system("")  # Aktiviert ANSI-Sequenzen in moderner Windows-Konsole
@@ -118,6 +205,7 @@ def main():
     print(f"  {c('[2]')} Multiplayer joinen   {d('(Client, Server-IP eingeben)')}")
     print(f"  {y('[3]')} Server starten       {d('(Hoste ein Spiel im WLAN)')}")
     print(f"  {gray('[4]')} VPN/Netz-Check       {d('(Tailscale/Zerotier Diagnose)')}")
+    print(f"  {gray('[5]')} Relay (Beta)        {d('(Room-Code über Relay-Server)')}")
     print()
     print(f"  {gray('[Q]')} Beenden")
     print()
@@ -192,6 +280,10 @@ def main():
             target = ""
         print("\033[?25l", end="", flush=True)
         _run_netcheck(target)
+        return main()
+
+    elif ch == '5':
+        _start_relay_mode()
         return main()
 
     elif ch == 'q':

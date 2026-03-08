@@ -194,6 +194,22 @@ python3 ~/games/void/game/void_netcheck.py 10.x.x.x
 
 ---
 
+
+### 🛰 Relay (Beta, Room-Code)
+
+Wenn direkte IP-Verbindungen trotz VPN nicht stabil sind, kannst du den Relay-Prototyp verwenden:
+
+```bash
+# Auf einem erreichbaren Server/VPS
+python3 ~/games/void/game/void_relay.py server --listen-port 8787
+```
+
+Dann in `void_launcher.py`:
+- Host: `[5] Relay (Beta)` → Modus `1` → Relay-Host/Port + Room-Code
+- Join: `[5] Relay (Beta)` → Modus `2` → gleicher Relay-Host/Port + Room-Code
+
+> Hinweis: v0.1 ist ein einfacher Tunnel-Prototyp (1 Host + 1 Join pro Room).
+
 ## 👨‍💻 Entwickelt von
 
 **IrsanAI** — [github.com/IrsanAI](https://github.com/IrsanAI)
