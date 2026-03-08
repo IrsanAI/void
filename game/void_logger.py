@@ -3,6 +3,7 @@ import os
 import time
 import logging
 import sys
+from logging.handlers import RotatingFileHandler
 
 class VoidLogger:
     """
@@ -28,10 +29,14 @@ class VoidLogger:
         # Logger konfigurieren
         self.logger = logging.getLogger("VOID")
         self.logger.setLevel(logging.DEBUG)
+        self.logger.propagate = False
+
+        if self.logger.handlers:
+            return
         
         # Datei-Handler (rotiert nicht, aber überschreibt bei jedem Start für Frische)
         # Oder wir hängen an mit Zeitstempel
-        file_handler = logging.FileHandler(self.log_file, mode='a')
+        file_handler = RotatingFileHandler(self.log_file, mode='a', maxBytes=2_000_000, backupCount=3)
         file_handler.setLevel(logging.DEBUG)
         
         # Formatierung
