@@ -201,7 +201,7 @@ Wenn direkte IP-Verbindungen trotz VPN nicht stabil sind, kannst du den Relay-Pr
 
 ```bash
 # Auf einem erreichbaren Server/VPS
-python3 ~/games/void/game/void_relay.py server --listen-port 8787
+python3 ~/games/void/game/void_relay.py server --listen-port 8787 --room-ttl 120
 ```
 
 Dann in `void_launcher.py`:
@@ -209,6 +209,13 @@ Dann in `void_launcher.py`:
 - Join: `[5] Relay (Beta)` → Modus `2` → gleicher Relay-Host/Port + Room-Code
 
 > Hinweis: v0.1 ist ein einfacher Tunnel-Prototyp (1 Host + 1 Join pro Room).
+
+Join versucht standardmäßig bis zu 20s erneut zu pairen (wenn der Host-Room noch nicht sichtbar ist):
+
+```bash
+python3 ~/games/void/game/void_relay.py join --relay-host <host> --room VOID42 --retry-seconds 20
+```
+
 
 ## 👨‍💻 Entwickelt von
 
