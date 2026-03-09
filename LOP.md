@@ -54,7 +54,7 @@
 - [x] Smoke-Test-Skript für Kernpfade vorhanden (`game/void_smoke_test.py`).
 - [x] Strukturierte Error-Codes im Client/Server ergänzt (inkl. Client-Anzeige).
 - [ ] Kleine Telemetrie-Option (opt-in) für Verbindungsfehler-Statistik.
-- [ ] Windows-Installer-Pfad optional angleichen (`install_windows.ps1`) für volle Device-Parität.
+- [x] Windows-Installer-Pfad ergänzt (`install/install_windows.ps1`) für Device-Parität.
 
 ---
 

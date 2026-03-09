@@ -561,7 +561,7 @@
       <div class="install-box">
         <p class="install-label">// Windows — einfügen &amp; Enter drücken</p>
         <div class="install-cmd" id="windows-cmd">
-          <span class="prompt">PS&gt; </span><span class="cmd">git clone</span> <span class="url">https://github.com/IrsanAI/void.git</span>; <span class="cmd">cd</span> void; <span class="cmd">python</span> game/void_launcher.py
+          <span class="prompt">PS&gt; </span><span class="cmd">irm</span> <span class="url">https://raw.githubusercontent.com/IrsanAI/void/main/install/install_windows.ps1</span> | <span class="cmd">iex</span>
         </div>
         <button class="copy-btn" onclick="copyCmd('windows-cmd', this)">
           <span class="copy-icon">⎘</span>
@@ -570,6 +570,7 @@
       </div>
       <p style="font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:12px;">
         Empfehlung: Windows Terminal + UTF-8 Font (z. B. Cascadia Mono), damit die Symbole korrekt aussehen.
+        Windows-Installer installiert git/python nicht automatisch und prüft nur deren Verfügbarkeit.
       </p>
       <div class="steps">
         <div class="step"><div class="step-num"></div><p class="step-text"><strong>Python</strong> und <strong>Git</strong> auf Windows installieren.</p></div>

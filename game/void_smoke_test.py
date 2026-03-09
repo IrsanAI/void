@@ -25,6 +25,12 @@ CHECK_FILES = [
     ROOT / "void_netcheck.py",
 ]
 
+INSTALLER_FILES = [
+    ROOT.parent / "install" / "install.sh",
+    ROOT.parent / "install" / "install_ios.sh",
+    ROOT.parent / "install" / "install_windows.ps1",
+]
+
 
 def check_compile() -> None:
     for path in CHECK_FILES:
@@ -87,12 +93,18 @@ def check_server_error_payload() -> None:
     assert captured.get("energy") == 2
 
 
+def check_installers_present() -> None:
+    missing = [str(p) for p in INSTALLER_FILES if not p.exists()]
+    assert not missing, f"Missing installer files: {', '.join(missing)}"
+
+
 def main() -> int:
     checks = [
         ("compile", check_compile),
         ("relay-json-framing", check_relay_json_framing),
         ("relay-parser", check_relay_parser),
         ("server-error-payload", check_server_error_payload),
+        ("installer-files", check_installers_present),
     ]
 
     failed = 0

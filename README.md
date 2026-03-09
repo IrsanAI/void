@@ -36,6 +36,10 @@ Der Installer erkennt iSH/a-Shell automatisch und installiert bei iSH die benöt
 
 ### Windows (PowerShell / Terminal)
 ```powershell
+irm https://raw.githubusercontent.com/IrsanAI/void/main/install/install_windows.ps1 | iex
+```
+Alternative (manuell):
+```powershell
 git clone https://github.com/IrsanAI/void.git
 cd void
 python game/void_launcher.py

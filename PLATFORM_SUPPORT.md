@@ -7,7 +7,7 @@ aber die plattformspezifischen Unterschiede transparent dokumentieren.
 
 | Bereich | Android (Termux) | Apple iOS (a-Shell / iSH) | Windows (PowerShell / Terminal) |
 |---|---|---|---|
-| Installation | ✅ `install/install.sh` | ✅ `install/install_ios.sh` | ⚠️ manuell via `git clone` + `python` |
+| Installation | ✅ `install/install.sh` | ✅ `install/install_ios.sh` | ✅ `install/install_windows.ps1` |
 | Launcher | ✅ | ✅ | ✅ |
 | Solo/Client/Server Runtime | ✅ | ✅ | ✅ |
 | Relay (Beta) | ✅ | ✅ | ✅ |
@@ -28,8 +28,7 @@ Plattform-spezifisch sollten nur bleiben:
 - optionale Audio/Haptik-Anbindungen,
 - kleine UX-Hinweise im Launcher.
 
-## Erkannte Lücke
+## Aktuelle Rest-Lücken
 
-- Für Windows gibt es derzeit keinen dedizierten Installer-Skriptpfad wie für Android/iOS.
-- Empfehlung: optional `install/install_windows.ps1` ergänzen (Paketcheck + Startkommando),
-  ohne den Python-Kern zu verzweigen.
+- Windows-Installer prüft Python/Git, installiert sie aber nicht automatisch (bewusst konservativ).
+- Audio/Haptik bleibt weiterhin plattformspezifisch unterschiedlich.
