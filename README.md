@@ -98,6 +98,15 @@ Du bist ein **Fragment** — unsichtbar, isoliert, gejagt. Die **VOID** ist kein
 
 ---
 
+## 🌐 PWA-Exploration (xterm.js + Pyodide)
+
+Deine Idee einer browserbasierten VOID-Version ist technisch sinnvoll und als PoC vorbereitet:
+
+- Strategie/Analyse: [`PWA_STRATEGY.md`](./PWA_STRATEGY.md)
+- Starter-Prototyp: [`docs/pwa_starter.html`](./docs/pwa_starter.html)
+
+> Ziel des Starters: xterm.js + Pyodide laden und einen Python-Heartbeat im Browser-Terminal ausführen.
+
 ## 🚀 Starten
 
 ```bash

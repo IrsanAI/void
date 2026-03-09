@@ -50,6 +50,7 @@
 
 ## P3 — Dev/Quality
 
+- [~] PWA-Exploration gestartet (`docs/pwa_starter.html`, `PWA_STRATEGY.md`).
 - [x] KI-Architektur-Doku ergänzt (`AI_AGENT.md`) + Wartungshinweis im KI-Core.
 - [x] Smoke-Test-Skript für Kernpfade vorhanden (`game/void_smoke_test.py`).
 - [x] Strukturierte Error-Codes im Client/Server ergänzt (inkl. Client-Anzeige).
