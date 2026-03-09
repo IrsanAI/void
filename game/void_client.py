@@ -474,7 +474,17 @@ def _handle_server_message(msg: dict):
         GS.add_message(f"Fragment_{msg.get('id')} heißt jetzt {msg.get('name')}.", "normal")
 
     elif mtype == "error":
-        GS.add_message(f"FEHLER: {msg.get('msg')}", "warn")
+        code = msg.get("code")
+        text = msg.get("msg", "Unbekannter Fehler")
+        if code == "NOT_ENOUGH_ENERGY":
+            needed = msg.get("needed", "?")
+            energy = msg.get("energy", "?")
+            action = msg.get("action", "aktion")
+            GS.add_message(f"FEHLER [{code}]: {text} ({action}, {energy}/{needed})", "warn")
+        elif code:
+            GS.add_message(f"FEHLER [{code}]: {text}", "warn")
+        else:
+            GS.add_message(f"FEHLER: {text}", "warn")
 
 
 # ── Input-Handler ────────────────────────────────────────────────

@@ -394,6 +394,137 @@
     .term-body .d { color: #3a3a48; }
 
     /* ── Footer ── */
+
+
+    .void-cursor {
+      position: fixed;
+      width: 22px;
+      height: 22px;
+      border: 2px solid var(--cyan);
+      border-radius: 50%;
+      box-shadow: 0 0 16px rgba(74,184,212,0.55);
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      z-index: 1001;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .hero-awake {
+      margin-top: 16px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--red);
+      letter-spacing: 0.08em;
+    }
+
+    .carousel {
+      margin-top: 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .carousel-view {
+      position: relative;
+      min-height: 260px;
+      background: #0d0d10;
+    }
+
+    .slide {
+      display: none;
+      width: 100%;
+      min-height: 260px;
+    }
+
+    .slide.active { display: block; }
+
+    .slide img {
+      width: 100%;
+      height: 260px;
+      object-fit: cover;
+      display: block;
+      border-bottom: 1px solid var(--dim);
+    }
+
+    .slide-fallback {
+      min-height: 260px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--mono);
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .slide-caption {
+      font-family: var(--mono);
+      color: var(--text);
+      font-size: 12px;
+      letter-spacing: 0.06em;
+      padding: 10px 14px;
+      background: rgba(17,17,21,0.85);
+    }
+
+    .carousel-controls {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px 14px;
+    }
+
+    .carousel-btn {
+      background: transparent;
+      border: 1px solid var(--dim);
+      color: var(--text);
+      border-radius: 4px;
+      padding: 8px 10px;
+      font-family: var(--mono);
+      cursor: pointer;
+    }
+
+    .carousel-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+
+    .asciinema-grid {
+      margin-top: 28px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 14px;
+    }
+
+    .asciinema-wrap {
+      border: 1px solid var(--red-dim);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #0d0d10;
+      padding: 10px;
+    }
+
+    .asciinema-title {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text);
+      margin: 0 0 8px;
+    }
+
+    .asciinema-fallback {
+      display: block;
+      margin-top: 10px;
+      color: var(--cyan);
+      font-family: var(--mono);
+      font-size: 11px;
+      text-decoration: none;
+      letter-spacing: 0.06em;
+    }
+
+
     footer {
       border-top: 1px solid var(--border);
       padding: 40px 0;
@@ -483,6 +614,7 @@
   </style>
 </head>
 <body>
+  <div class="void-cursor" id="void-cursor"></div>
 
 <header>
   <div class="container">
@@ -493,6 +625,7 @@
   ╚═══╝   ╚═════╝ ╚═╝╚═════╝</pre>
     <p class="tagline">Psychologisches Survival<span class="cursor"></span></p>
     <p class="sub-tagline">IrsanAI · Terminal Game · Android · iOS · Windows</p>
+    <p class="hero-awake">// berühre die Seite — die VOID erwacht</p>
     <p class="sound-hint">// berühre die seite — die void erwacht</p>
     <p class="audio-status" id="audio-status">AUDIO: WARTET AUF INTERAKTION</p>
   </div>
@@ -561,7 +694,7 @@
       <div class="install-box">
         <p class="install-label">// Windows — einfügen &amp; Enter drücken</p>
         <div class="install-cmd" id="windows-cmd">
-          <span class="prompt">PS&gt; </span><span class="cmd">git clone</span> <span class="url">https://github.com/IrsanAI/void.git</span>; <span class="cmd">cd</span> void; <span class="cmd">python</span> game/void_launcher.py
+          <span class="prompt">PS&gt; </span><span class="cmd">irm</span> <span class="url">https://raw.githubusercontent.com/IrsanAI/void/main/install/install_windows.ps1</span> | <span class="cmd">iex</span>
         </div>
         <button class="copy-btn" onclick="copyCmd('windows-cmd', this)">
           <span class="copy-icon">⎘</span>
@@ -570,6 +703,7 @@
       </div>
       <p style="font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:12px;">
         Empfehlung: Windows Terminal + UTF-8 Font (z. B. Cascadia Mono), damit die Symbole korrekt aussehen.
+        Windows-Installer installiert git/python nicht automatisch und prüft nur deren Verfügbarkeit.
       </p>
       <div class="steps">
         <div class="step"><div class="step-num"></div><p class="step-text"><strong>Python</strong> und <strong>Git</strong> auf Windows installieren.</p></div>
@@ -611,6 +745,51 @@
 
 <section>
   <div class="container">
+    <p class="section-label">// live preview</p>
+    <h2>Terminal-Ansichten & Demo</h2>
+    <p>Screenshot-Carousel mit Platzhaltern für eure besten Sessions sowie Asciinema-Embed für eine schnelle Live-Demo.</p>
+
+    <div class="carousel" id="shot-carousel">
+      <div class="carousel-view">
+        <div class="slide active">
+          <img src="assets/screenshots/screenshot-1.png" alt="VOID Screenshot 1" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+          <div class="slide-fallback" style="display:none;">screenshot-1.png hinzufügen<br/>docs/assets/screenshots/</div>
+          <div class="slide-caption">VOID Solo — Kontakt mit der Instanz</div>
+        </div>
+        <div class="slide">
+          <img src="assets/screenshots/screenshot-2.png" alt="VOID Screenshot 2" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+          <div class="slide-fallback" style="display:none;">screenshot-2.png hinzufügen<br/>docs/assets/screenshots/</div>
+          <div class="slide-caption">Glitch-Ereignis und Energie-Druck</div>
+        </div>
+        <div class="slide">
+          <img src="assets/screenshots/screenshot-3.png" alt="VOID Screenshot 3" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+          <div class="slide-fallback" style="display:none;">screenshot-3.png hinzufügen<br/>docs/assets/screenshots/</div>
+          <div class="slide-caption">Jagdphase im Multiplayer</div>
+        </div>
+      </div>
+      <div class="carousel-controls">
+        <button class="carousel-btn" onclick="moveSlide(-1)">◀ Zurück</button>
+        <button class="carousel-btn" onclick="moveSlide(1)">Weiter ▶</button>
+      </div>
+    </div>
+
+    <div class="asciinema-grid">
+      <div class="asciinema-wrap">
+        <p class="asciinema-title">Asciinema Demo 1</p>
+        <script src="https://asciinema.org/a/823564.js" id="asciicast-823564" async="true"></script>
+        <a class="asciinema-fallback" href="https://asciinema.org/a/823564" target="_blank" rel="noopener">↗ Öffnen auf asciinema.org</a>
+      </div>
+      <div class="asciinema-wrap">
+        <p class="asciinema-title">Asciinema Demo 2</p>
+        <script src="https://asciinema.org/a/823565.js" id="asciicast-823565" async="true"></script>
+        <a class="asciinema-fallback" href="https://asciinema.org/a/823565" target="_blank" rel="noopener">↗ Öffnen auf asciinema.org</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
     <p class="section-label">// features</p>
     <div class="features">
       <div class="feat"><span class="feat-icon">🧠</span><p class="feat-title">Lernende KI</p><p class="feat-desc">Die VOID analysiert deine Muster in Echtzeit.</p></div>
@@ -622,7 +801,7 @@
 
 <footer>
   <div class="container">
-    <p>Entwickelt von <a href="https://github.com/IrsanAI">IrsanAI</a> · MIT Lizenz</p>
+    <p>Entwickelt von <a href="https://github.com/IrsanAI">IrsanAI</a> · MIT Lizenz · <span id="void-egg" style="cursor:pointer;">Die VOID beobachtet dich</span></p>
   </div>
 </footer>
 
@@ -741,6 +920,45 @@
     initAudio();
     playTone(180, 0.06, 'triangle', 0.03);
   }, { once: true });
+
+
+  // VOID cursor + mini glitch trigger
+  const vc = document.getElementById('void-cursor');
+  const logo = document.querySelector('.ascii-logo');
+  document.addEventListener('pointermove', (e) => {
+    if (!vc) return;
+    vc.style.opacity = '1';
+    vc.style.left = `${e.clientX}px`;
+    vc.style.top = `${e.clientY}px`;
+  });
+  document.querySelector('header')?.addEventListener('click', () => {
+    if (!logo) return;
+    logo.style.filter = 'drop-shadow(0 0 6px var(--red))';
+    setTimeout(() => { logo.style.filter = 'none'; }, 140);
+  });
+
+  // Carousel
+  let slideIndex = 0;
+  const slides = Array.from(document.querySelectorAll('#shot-carousel .slide'));
+  function renderSlide() {
+    slides.forEach((s, i) => s.classList.toggle('active', i === slideIndex));
+  }
+  function moveSlide(delta) {
+    if (!slides.length) return;
+    slideIndex = (slideIndex + delta + slides.length) % slides.length;
+    renderSlide();
+    playTone(260 + (slideIndex * 30), 0.05, 'square', 0.03);
+  }
+  if (slides.length) {
+    setInterval(() => moveSlide(1), 4500);
+    renderSlide();
+  }
+
+  // Easter Egg
+  document.getElementById('void-egg')?.addEventListener('click', () => {
+    alert('Die VOID hat dich markiert.');
+    playTone(110, 0.2, 'sawtooth', 0.04);
+  });
 </script>
 
 </body>
