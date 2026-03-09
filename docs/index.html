@@ -625,11 +625,11 @@
 ╚██╗ ██╔╝██║   ██║██║██║  ██║
  ╚████╔╝ ╚██████╔╝██║██████╔╝
   ╚═══╝   ╚═════╝ ╚═╝╚═════╝</pre>
-    <p class="tagline">Psychologisches Survival<span class="cursor"></span></p>
+    <p class="tagline"><span data-i18n="tagline">Psychologisches Survival</span><span class="cursor"></span></p>
     <p class="sub-tagline">IrsanAI · Terminal Game · Android · iOS · Windows</p>
-    <p class="hero-awake">// berühre die Seite — die VOID erwacht</p>
-    <p class="sound-hint">// berühre die seite — die void erwacht</p>
-    <p class="audio-status" id="audio-status">AUDIO: WARTET AUF INTERAKTION</p>
+    <p class="hero-awake" data-i18n="hero_awake">// berühre die Seite — die VOID erwacht</p>
+    <p class="sound-hint" data-i18n="sound_hint">// berühre die seite — die void erwacht</p>
+    <p class="audio-status" id="audio-status" data-i18n="audio_wait">AUDIO: WARTET AUF INTERAKTION</p>
   </div>
 </header>
 
@@ -640,13 +640,13 @@
 
 <section id="install">
   <div class="container">
-    <p class="section-label">// installation</p>
-    <h2>Wähle dein System</h2>
+    <p class="section-label" data-i18n="sec_install">// installation</p>
+    <h2 data-i18n="choose_system">Wähle dein System</h2>
     
     <div class="tabs">
-      <button class="tab-btn active" onclick="showTab('android', this)">Android</button>
-      <button class="tab-btn" onclick="showTab('ios', this)">Apple iOS</button>
-      <button class="tab-btn" onclick="showTab('windows', this)">Windows</button>
+      <button class="tab-btn active" onclick="showTab('android', this)" data-i18n="tab_android">Android</button>
+      <button class="tab-btn" onclick="showTab('ios', this)" data-i18n="tab_ios">Apple iOS</button>
+      <button class="tab-btn" onclick="showTab('windows', this)" data-i18n="tab_windows">Windows</button>
     </div>
 
     <!-- Android Tab -->
@@ -659,7 +659,7 @@
         </div>
         <button class="copy-btn" onclick="copyCmd('android-cmd', this)">
           <span class="copy-icon">⎘</span>
-          <span>Befehl kopieren</span>
+          <span data-i18n="copy_cmd">Befehl kopieren</span>
         </button>
       </div>
       <div class="steps">
@@ -678,7 +678,7 @@
         </div>
         <button class="copy-btn" onclick="copyCmd('ios-cmd', this)">
           <span class="copy-icon">⎘</span>
-          <span>Befehl kopieren</span>
+          <span data-i18n="copy_cmd">Befehl kopieren</span>
         </button>
       </div>
       <p style="font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:12px;">
@@ -700,7 +700,7 @@
         </div>
         <button class="copy-btn" onclick="copyCmd('windows-cmd', this)">
           <span class="copy-icon">⎘</span>
-          <span>Befehl kopieren</span>
+          <span data-i18n="copy_cmd">Befehl kopieren</span>
         </button>
       </div>
       <p style="font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:12px;">
@@ -727,8 +727,8 @@
 
 <section>
   <div class="container">
-    <p class="section-label">// terminal preview</p>
-    <h2>So sieht es aus</h2>
+    <p class="section-label" data-i18n="sec_terminal">// terminal preview</p>
+    <h2 data-i18n="looks_like">So sieht es aus</h2>
     <div class="terminal">
       <div class="term-bar">
         <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
@@ -747,9 +747,9 @@
 
 <section>
   <div class="container">
-    <p class="section-label">// live preview</p>
-    <h2>Terminal-Ansichten & Demo</h2>
-    <p>Screenshot-Carousel mit Platzhaltern für eure besten Sessions sowie Asciinema-Embed für eine schnelle Live-Demo.</p>
+    <p class="section-label" data-i18n="sec_live">// live preview</p>
+    <h2 data-i18n="live_title">Terminal-Ansichten & Demo</h2>
+    <p data-i18n="live_desc">Screenshot-Carousel mit Platzhaltern für eure besten Sessions sowie Asciinema-Embed für eine schnelle Live-Demo.</p>
 
     <div class="carousel" id="shot-carousel">
       <div class="carousel-view">
@@ -777,14 +777,14 @@
 
     <div class="asciinema-grid">
       <div class="asciinema-wrap">
-        <p class="asciinema-title">Asciinema Demo 1</p>
+        <p class="asciinema-title" data-i18n="asci_1">Asciinema Demo 1</p>
         <script src="https://asciinema.org/a/823564.js" id="asciicast-823564" async="true"></script>
-        <a class="asciinema-fallback" href="https://asciinema.org/a/823564" target="_blank" rel="noopener">↗ Öffnen auf asciinema.org</a>
+        <a class="asciinema-fallback" href="https://asciinema.org/a/823564" target="_blank" rel="noopener">↗ <span data-i18n="open_asci">Öffnen auf asciinema.org</span></a>
       </div>
       <div class="asciinema-wrap">
-        <p class="asciinema-title">Asciinema Demo 2</p>
+        <p class="asciinema-title" data-i18n="asci_2">Asciinema Demo 2</p>
         <script src="https://asciinema.org/a/823565.js" id="asciicast-823565" async="true"></script>
-        <a class="asciinema-fallback" href="https://asciinema.org/a/823565" target="_blank" rel="noopener">↗ Öffnen auf asciinema.org</a>
+        <a class="asciinema-fallback" href="https://asciinema.org/a/823565" target="_blank" rel="noopener">↗ <span data-i18n="open_asci">Öffnen auf asciinema.org</span></a>
       </div>
     </div>
   </div>
@@ -792,18 +792,18 @@
 
 <section>
   <div class="container">
-    <p class="section-label">// features</p>
+    <p class="section-label" data-i18n="sec_features">// features</p>
     <div class="features">
-      <div class="feat"><span class="feat-icon">🧠</span><p class="feat-title">Lernende KI</p><p class="feat-desc">Die VOID analysiert deine Muster in Echtzeit.</p></div>
-      <div class="feat"><span class="feat-icon">🔊</span><p class="feat-title">Immersiver Sound</p><p class="feat-desc">Dynamische Soundscapes und Stereo-Simulation.</p></div>
-      <div class="feat"><span class="feat-icon">🪟</span><p class="feat-title">Windows Support</p><p class="feat-desc">Direkter Start über PowerShell und Windows Terminal.</p></div>
+      <div class="feat"><span class="feat-icon">🧠</span><p class="feat-title" data-i18n="feat_ai">Lernende KI</p><p class="feat-desc" data-i18n="feat_ai_desc">Die VOID analysiert deine Muster in Echtzeit.</p></div>
+      <div class="feat"><span class="feat-icon">🔊</span><p class="feat-title" data-i18n="feat_sound">Immersiver Sound</p><p class="feat-desc" data-i18n="feat_sound_desc">Dynamische Soundscapes und Stereo-Simulation.</p></div>
+      <div class="feat"><span class="feat-icon">🪟</span><p class="feat-title" data-i18n="feat_windows">Windows Support</p><p class="feat-desc" data-i18n="feat_windows_desc">Direkter Start über PowerShell und Windows Terminal.</p></div>
     </div>
   </div>
 </section>
 
 <footer>
   <div class="container">
-    <p>Entwickelt von <a href="https://github.com/IrsanAI">IrsanAI</a> · MIT Lizenz · <span id="void-egg" style="cursor:pointer;">Die VOID beobachtet dich</span></p>
+    <p>Entwickelt von <a href="https://github.com/IrsanAI">IrsanAI</a> · MIT Lizenz · <span id="void-egg" style="cursor:pointer;"><span data-i18n="void_watch">Die VOID beobachtet dich</span></span></p>
   </div>
 </footer>
 
@@ -816,11 +816,82 @@
   }
 
   let currentLang = 'de';
+
+  const I18N = {
+    de: {
+      tagline: 'Psychologisches Survival',
+      hero_awake: '// berühre die Seite — die VOID erwacht',
+      sound_hint: '// berühre die seite — die void erwacht',
+      audio_wait: 'AUDIO: WARTET AUF INTERAKTION',
+      sec_install: '// installation',
+      choose_system: 'Wähle dein System',
+      tab_android: 'Android',
+      tab_ios: 'Apple iOS',
+      tab_windows: 'Windows',
+      copy_cmd: 'Befehl kopieren',
+      sec_terminal: '// terminal preview',
+      looks_like: 'So sieht es aus',
+      sec_live: '// live preview',
+      live_title: 'Terminal-Ansichten & Demo',
+      live_desc: 'Screenshot-Carousel mit Platzhaltern für eure besten Sessions sowie Asciinema-Embed für eine schnelle Live-Demo.',
+      asci_1: 'Asciinema Demo 1',
+      asci_2: 'Asciinema Demo 2',
+      open_asci: 'Öffnen auf asciinema.org',
+      sec_features: '// features',
+      feat_ai: 'Lernende KI',
+      feat_ai_desc: 'Die VOID analysiert deine Muster in Echtzeit.',
+      feat_sound: 'Immersiver Sound',
+      feat_sound_desc: 'Dynamische Soundscapes und Stereo-Simulation.',
+      feat_windows: 'Windows Support',
+      feat_windows_desc: 'Direkter Start über PowerShell und Windows Terminal.',
+      void_watch: 'Die VOID beobachtet dich'
+    },
+    en: {
+      tagline: 'Psychological Survival',
+      hero_awake: '// touch the page — VOID awakens',
+      sound_hint: '// touch the page — void awakens',
+      audio_wait: 'AUDIO: WAITING FOR INTERACTION',
+      sec_install: '// installation',
+      choose_system: 'Choose your system',
+      tab_android: 'Android',
+      tab_ios: 'Apple iOS',
+      tab_windows: 'Windows',
+      copy_cmd: 'Copy command',
+      sec_terminal: '// terminal preview',
+      looks_like: 'What it looks like',
+      sec_live: '// live preview',
+      live_title: 'Terminal views & demo',
+      live_desc: 'Screenshot carousel with placeholders for your best sessions plus Asciinema embeds for quick live demos.',
+      asci_1: 'Asciinema Demo 1',
+      asci_2: 'Asciinema Demo 2',
+      open_asci: 'Open on asciinema.org',
+      sec_features: '// features',
+      feat_ai: 'Adaptive AI',
+      feat_ai_desc: 'VOID analyzes your behavior patterns in real time.',
+      feat_sound: 'Immersive Sound',
+      feat_sound_desc: 'Dynamic soundscapes and stereo simulation.',
+      feat_windows: 'Windows Support',
+      feat_windows_desc: 'Direct launch via PowerShell and Windows Terminal.',
+      void_watch: 'VOID is watching you'
+    }
+  };
+
+  function applyLang() {
+    const dict = I18N[currentLang] || I18N.de;
+    document.querySelectorAll('[data-i18n]').forEach((el) => {
+      const key = el.getAttribute('data-i18n');
+      if (dict[key]) el.textContent = dict[key];
+    });
+    document.getElementById('lang-btn').innerText = currentLang === 'de' ? 'EN' : 'DE';
+  }
+
   function toggleLang() {
     currentLang = currentLang === 'de' ? 'en' : 'de';
-    document.getElementById('lang-btn').innerText = currentLang === 'de' ? 'EN' : 'DE';
+    applyLang();
     playTone(300, 0.06, "triangle", 0.03);
   }
+
+  applyLang();
 
   // Glitch Effekt für das Banner
   const banner = document.querySelector('.ascii-logo');
@@ -843,7 +914,8 @@
       .replace('PS> ', '');
     navigator.clipboard.writeText(text);
     const original = btn.innerHTML;
-    btn.innerHTML = '<span>✓</span><span>Kopiert!</span>';
+    const copiedText = currentLang === 'de' ? 'Kopiert!' : 'Copied!';
+    btn.innerHTML = `<span>✓</span><span>${copiedText}</span>`;
     btn.style.background = 'var(--green)';
     playTone(520, 0.09, 'square', 0.04);
     setTimeout(() => {

@@ -39,7 +39,7 @@
 - [x] Sound-Diagnose-Tool vorhanden (`void_sound_diagnose.py`).
 - [ ] Preset „silent-safe“ für Umgebungen ohne Audio-Backend.
 - [ ] Installer: explizite Audio-Backend Zusammenfassung nach Installation.
-- [ ] GH-Page: echte Mehrsprachigkeit DE/EN statt Platzhalter-Toggle.
+- [x] GH-Page: echte Mehrsprachigkeit DE/EN für zentrale UI-Inhalte umgesetzt.
 
 ## P2 — Installer & Runtime Hardening
 
