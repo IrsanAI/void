@@ -46,6 +46,13 @@ python game/void_launcher.py
 
 ---
 
+
+## 🧭 Plattform-Status (Android / Apple / Windows)
+
+Eine aktuelle Matrix mit Gemeinsamkeiten, Unterschieden und offenen Lücken findest du hier:
+
+- [`PLATFORM_SUPPORT.md`](./PLATFORM_SUPPORT.md)
+
 ## 🍎 VOID auf iOS (Apple)
 
 VOID ist nun vollständig kompatibel mit Apple-Geräten. Dank der Unterstützung für **a-Shell** und **iSH** können iPhone- und iPad-Nutzer das Spiel direkt im Terminal erleben.
