@@ -17,7 +17,7 @@
 - [x] **`void_netcheck.py`** erstellt (lokale IP, Tailscale-IP, Port-Check 7777).
 - [x] Client-Fehlertexte bei Timeout verbessert (NAT/CGNAT/VPN-Hinweise + Netcheck-Befehl).
 - [x] **Relay-Prototyp v0.1** (Cloud/VPS): Host+Client verbinden outbound, Join per Room-Code (`void_relay.py`).
-- [~] Relay-Robustheit: Join-Retry + Room-TTL/Cleanup umgesetzt, Heartbeat/Keepalive weiter offen.
+- [~] Relay-Robustheit: Join-Retry + Room-TTL/Cleanup + Host-Keepalive umgesetzt, Auto-Reconnect weiter offen.
 - [x] Minimales Matchmaking (Room erstellen/joinen) mit Code-Lebensdauer (Room-TTL).
 
 ## P1 — Session/Identity (globale VOID-ID)
@@ -59,6 +59,6 @@
 
 ## Nächster Sprint (vereinbart)
 
-1. Heartbeat/Keepalive + vollständiges Auto-Reconnect für Relay-Verbindungen.
+1. Vollständiges Auto-Reconnect für Relay-Verbindungen (Host/Join) bei kurzen Unterbrechungen.
 2. Optional mehrere Joiner/Rooms + sauberer Room-Lifecycle unter Last.
 3. Kurzer End-to-End Testplan für Android ↔ iOS über Mobilfunk + VPN + Relay.

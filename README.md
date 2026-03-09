@@ -210,6 +210,8 @@ Dann in `void_launcher.py`:
 
 > Hinweis: v0.1 ist ein einfacher Tunnel-Prototyp (1 Host + 1 Join pro Room).
 
+Der Host erhält während der Wartephase periodische Keepalive-Events vom Relay, damit Timeouts/Room-Ablauf transparent bleiben.
+
 Join versucht standardmäßig bis zu 20s erneut zu pairen (wenn der Host-Room noch nicht sichtbar ist):
 
 ```bash

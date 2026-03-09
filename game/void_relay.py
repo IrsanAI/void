@@ -14,6 +14,10 @@ import time
 
 BUFFER = 4096
 DEFAULT_ROOM_TTL = 120
+KEEPALIVE_INTERVAL = 10
+ACCEPT_TIMEOUT = 1.0
+_JSON_BUFFERS = {}
+_JSON_LOCK = threading.Lock()
 
 
 def _send_json(sock, payload):
@@ -22,13 +26,19 @@ def _send_json(sock, payload):
 
 def _recv_json_line(sock, timeout=15.0):
     sock.settimeout(timeout)
-    buf = ""
+    sock_id = sock.fileno()
+    with _JSON_LOCK:
+        buf = _JSON_BUFFERS.get(sock_id, "")
     while "\n" not in buf:
         chunk = sock.recv(1024)
         if not chunk:
+            with _JSON_LOCK:
+                _JSON_BUFFERS.pop(sock_id, None)
             raise ConnectionError("Verbindung geschlossen")
         buf += chunk.decode("utf-8", errors="ignore")
-    line, _ = buf.split("\n", 1)
+    line, remainder = buf.split("\n", 1)
+    with _JSON_LOCK:
+        _JSON_BUFFERS[sock_id] = remainder
     return json.loads(line.strip())
 
 
@@ -76,24 +86,38 @@ class RelayServer:
     def serve_forever(self):
         srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        srv.settimeout(ACCEPT_TIMEOUT)
         srv.bind((self.host, self.port))
         srv.listen(64)
         print(f"[relay] listening on {self.host}:{self.port} (room_ttl={self.room_ttl}s)")
 
         while True:
             self._cleanup_expired_rooms()
-            conn, addr = srv.accept()
+            try:
+                conn, addr = srv.accept()
+            except socket.timeout:
+                continue
             threading.Thread(target=self._handle_conn, args=(conn, addr), daemon=True).start()
 
     def _cleanup_expired_rooms(self):
         now = time.time()
         stale = []
+        keepalive = []
         with self.lock:
             for room, slot in self.rooms.items():
                 if now - slot["created"] > self.room_ttl:
                     stale.append((room, slot["host"]))
+                elif now - slot.get("last_keepalive", 0) > KEEPALIVE_INTERVAL:
+                    slot["last_keepalive"] = now
+                    keepalive.append((room, slot["host"]))
             for room, _ in stale:
                 self.rooms.pop(room, None)
+
+        for room, host_conn in keepalive:
+            try:
+                _send_json(host_conn, {"status": "waiting", "room": room, "code": "KEEPALIVE"})
+            except Exception:
+                pass
 
         for room, host_conn in stale:
             try:
@@ -122,7 +146,7 @@ class RelayServer:
                         _send_json(conn, {"status": "error", "reason": "room already has host", "code": "ROOM_IN_USE"})
                         conn.close()
                         return
-                    self.rooms[room] = {"host": conn, "created": time.time()}
+                    self.rooms[room] = {"host": conn, "created": time.time(), "last_keepalive": time.time()}
                 _send_json(conn, {"status": "waiting", "room": room})
                 return
 
@@ -168,8 +192,14 @@ def run_host(args):
         raise RuntimeError(f"Relay-Fehler [{msg.get('code', 'UNKNOWN')}]: {msg.get('reason')}")
     print(f"[host] waiting for join in room {args.room.upper()} @ {args.relay_host}:{args.relay_port}")
 
-    msg = _recv_json_line(relay, timeout=None)
-    if msg.get("status") != "paired":
+    while True:
+        msg = _recv_json_line(relay, timeout=None)
+        if msg.get("status") == "waiting":
+            continue
+        if msg.get("status") == "error":
+            raise RuntimeError(f"Relay-Fehler [{msg.get('code', 'UNKNOWN')}]: {msg.get('reason')}")
+        if msg.get("status") == "paired":
+            break
         raise RuntimeError("Relay pairing fehlgeschlagen")
     print("[host] paired, verbinde lokal mit void_server...")
 
@@ -185,43 +215,45 @@ def run_join(args):
     listener.bind((args.listen_host, args.listen_port))
     listener.listen(1)
     print(f"[join] local endpoint wartet auf void_client: {args.listen_host}:{args.listen_port}")
-
-    relay = None
-    deadline = time.time() + args.retry_seconds
-    while True:
+    try:
         relay = None
-        try:
-            relay, msg = _open_relay("join", args.relay_host, args.relay_port, args.room)
-        except OSError as exc:
-            msg = {"status": "error", "reason": str(exc), "code": "RELAY_UNREACHABLE"}
-
-        if msg.get("status") != "error":
-            break
-
-        if relay is not None:
+        deadline = time.time() + args.retry_seconds
+        while True:
+            relay = None
             try:
-                relay.close()
-            except Exception:
-                pass
+                relay, msg = _open_relay("join", args.relay_host, args.relay_port, args.room)
+            except OSError as exc:
+                msg = {"status": "error", "reason": str(exc), "code": "RELAY_UNREACHABLE"}
 
-        if msg.get("code") != "ROOM_NOT_FOUND" and time.time() >= deadline:
+            if msg.get("status") != "error":
+                break
+
+            if relay is not None:
+                try:
+                    relay.close()
+                except Exception:
+                    pass
+
+            if msg.get("code") != "ROOM_NOT_FOUND" and time.time() >= deadline:
+                raise RuntimeError(f"Relay-Fehler [{msg.get('code', 'UNKNOWN')}]: {msg.get('reason')}")
+
+            if time.time() >= deadline:
+                raise RuntimeError("Relay pairing fehlgeschlagen: Room nicht gefunden (Timeout)")
+
+            print(f"[join] warte auf Host ({msg.get('code', 'UNKNOWN')}) ...")
+            time.sleep(args.retry_interval)
+
+        if msg.get("status") == "error":
             raise RuntimeError(f"Relay-Fehler [{msg.get('code', 'UNKNOWN')}]: {msg.get('reason')}")
+        if msg.get("status") != "paired":
+            raise RuntimeError("Relay pairing fehlgeschlagen")
 
-        if time.time() >= deadline:
-            raise RuntimeError("Relay pairing fehlgeschlagen: Room nicht gefunden (Timeout)")
-
-        print(f"[join] warte auf Host ({msg.get('code', 'UNKNOWN')}) ...")
-        time.sleep(args.retry_interval)
-
-    if msg.get("status") == "error":
-        raise RuntimeError(f"Relay-Fehler [{msg.get('code', 'UNKNOWN')}]: {msg.get('reason')}")
-    if msg.get("status") != "paired":
-        raise RuntimeError("Relay pairing fehlgeschlagen")
-
-    print("[join] paired. Starte jetzt void_client auf localhost.")
-    local_conn, local_addr = listener.accept()
-    print(f"[join] local client connected: {local_addr}")
-    _bridge(local_conn, relay)
+        print("[join] paired. Starte jetzt void_client auf localhost.")
+        local_conn, local_addr = listener.accept()
+        print(f"[join] local client connected: {local_addr}")
+        _bridge(local_conn, relay)
+    finally:
+        listener.close()
 
 
 def build_parser():
