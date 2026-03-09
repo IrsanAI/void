@@ -191,6 +191,12 @@ Schneller VPN/Port-Check:
 python3 ~/games/void/game/void_netcheck.py 10.x.x.x
 ```
 
+Lokaler Smoke-Test (ohne externe Dienste):
+
+```bash
+python3 ~/games/void/game/void_smoke_test.py
+```
+
 
 ---
 
