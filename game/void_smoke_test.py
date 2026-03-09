@@ -70,11 +70,29 @@ def check_relay_parser() -> None:
     assert abs(join_args.retry_interval - 0.5) < 1e-9
 
 
+def check_server_error_payload() -> None:
+    import void_server as server
+
+    vs = server.VoidServer()
+    captured = {}
+
+    def fake_send(_conn, data):
+        captured.update(data)
+
+    vs._send = fake_send  # type: ignore[method-assign]
+    vs._send_error(None, "NOT_ENOUGH_ENERGY", "Zu wenig Energie", needed=5, energy=2)
+    assert captured.get("type") == "error"
+    assert captured.get("code") == "NOT_ENOUGH_ENERGY"
+    assert captured.get("needed") == 5
+    assert captured.get("energy") == 2
+
+
 def main() -> int:
     checks = [
         ("compile", check_compile),
         ("relay-json-framing", check_relay_json_framing),
         ("relay-parser", check_relay_parser),
+        ("server-error-payload", check_server_error_payload),
     ]
 
     failed = 0

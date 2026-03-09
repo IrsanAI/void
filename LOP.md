@@ -52,7 +52,7 @@
 
 - [x] KI-Architektur-Doku ergänzt (`AI_AGENT.md`) + Wartungshinweis im KI-Core.
 - [x] Smoke-Test-Skript für Kernpfade vorhanden (`game/void_smoke_test.py`).
-- [ ] Strukturierte Error-Codes im Client/Server (statt nur freie Texte).
+- [x] Strukturierte Error-Codes im Client/Server ergänzt (inkl. Client-Anzeige).
 - [ ] Kleine Telemetrie-Option (opt-in) für Verbindungsfehler-Statistik.
 
 ---
