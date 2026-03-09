@@ -46,6 +46,13 @@ python game/void_launcher.py
 
 ---
 
+
+## 🧭 Plattform-Status (Android / Apple / Windows)
+
+Eine aktuelle Matrix mit Gemeinsamkeiten, Unterschieden und offenen Lücken findest du hier:
+
+- [`PLATFORM_SUPPORT.md`](./PLATFORM_SUPPORT.md)
+
 ## 🍎 VOID auf iOS (Apple)
 
 VOID ist nun vollständig kompatibel mit Apple-Geräten. Dank der Unterstützung für **a-Shell** und **iSH** können iPhone- und iPad-Nutzer das Spiel direkt im Terminal erleben.
@@ -191,6 +198,12 @@ Schneller VPN/Port-Check:
 python3 ~/games/void/game/void_netcheck.py 10.x.x.x
 ```
 
+Lokaler Smoke-Test (ohne externe Dienste):
+
+```bash
+python3 ~/games/void/game/void_smoke_test.py
+```
+
 
 ---
 
@@ -201,7 +214,7 @@ Wenn direkte IP-Verbindungen trotz VPN nicht stabil sind, kannst du den Relay-Pr
 
 ```bash
 # Auf einem erreichbaren Server/VPS
-python3 ~/games/void/game/void_relay.py server --listen-port 8787
+python3 ~/games/void/game/void_relay.py server --listen-port 8787 --room-ttl 120
 ```
 
 Dann in `void_launcher.py`:
@@ -209,6 +222,15 @@ Dann in `void_launcher.py`:
 - Join: `[5] Relay (Beta)` → Modus `2` → gleicher Relay-Host/Port + Room-Code
 
 > Hinweis: v0.1 ist ein einfacher Tunnel-Prototyp (1 Host + 1 Join pro Room).
+
+Der Host erhält während der Wartephase periodische Keepalive-Events vom Relay, damit Timeouts/Room-Ablauf transparent bleiben.
+
+Join versucht standardmäßig bis zu 20s erneut zu pairen (wenn der Host-Room noch nicht sichtbar ist):
+
+```bash
+python3 ~/games/void/game/void_relay.py join --relay-host <host> --room VOID42 --retry-seconds 20
+```
+
 
 ## 👨‍💻 Entwickelt von
 
