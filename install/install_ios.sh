@@ -86,6 +86,16 @@ fi
 # Ausführbar machen
 chmod +x "$INSTALL_DIR"/game/*.py 2>/dev/null || true
 
+# Installer-Selftest
+if [ -f "$INSTALL_DIR/install/installer_selftest.py" ]; then
+    echo "Installer-Selftest läuft (Kern-Dateien + Python-Compile)..."
+    if python3 "$INSTALL_DIR/install/installer_selftest.py" >/dev/null 2>&1; then
+        echo "Installer-Selftest erfolgreich."
+    else
+        echo "Warnung: Installer-Selftest meldet Probleme."
+    fi
+fi
+
 # Robuster Startbefehl (unabhängig von Alias und Shell-Neustart)
 mkdir -p "$HOME/bin"
 cat > "$HOME/bin/void" << EOF

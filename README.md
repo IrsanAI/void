@@ -218,6 +218,13 @@ python3 ~/games/void/game/void_smoke_test.py
 ```
 
 
+Installations-Selftest (läuft automatisch in Installern, manuell möglich):
+
+```bash
+python3 ~/games/void/install/installer_selftest.py
+```
+
+
 ---
 
 

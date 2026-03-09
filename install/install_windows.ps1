@@ -88,9 +88,10 @@ if (-not ($profileContent -match [regex]::Escape($BinDir))) {
   Ok "PATH-Eintrag bereits vorhanden."
 }
 
-Info "[5/5] Führe lokalen Smoke-Test aus..."
+Info "[5/5] Führe Installer-Selftest + lokalen Smoke-Test aus..."
 $pyExe = (Get-Command python -ErrorAction SilentlyContinue)
 if (-not $pyExe) { $pyExe = (Get-Command python3 -ErrorAction SilentlyContinue) }
+& $pyExe.Source "$InstallDir\install\installer_selftest.py"
 & $pyExe.Source "$InstallDir\game\void_smoke_test.py"
 
 Write-Host ""

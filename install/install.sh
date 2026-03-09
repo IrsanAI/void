@@ -100,6 +100,16 @@ chmod +x "$INSTALL_DIR/game/void_solo.py"
 chmod +x "$INSTALL_DIR/game/void_server.py"
 chmod +x "$INSTALL_DIR/game/void_client.py"
 
+# ── Installer-Selftest ─────────────────────────────────────────
+if [ -f "$INSTALL_DIR/install/installer_selftest.py" ]; then
+  c "  [Selftest] Prüfe Kern-Dateien und Python-Laufbarkeit..."
+  if python3 "$INSTALL_DIR/install/installer_selftest.py" >/dev/null 2>&1; then
+    g "        Installer-Selftest erfolgreich ✓"
+  else
+    y "        Installer-Selftest meldet Probleme (Details lokal prüfen)."
+  fi
+fi
+
 # ── [6/6] Startbefehl + Alias + Widget einrichten ───────────────
 c "  [6/6] Startbefehl, Alias & Home-Screen Widget einrichten..."
 

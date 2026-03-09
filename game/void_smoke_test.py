@@ -29,6 +29,7 @@ INSTALLER_FILES = [
     ROOT.parent / "install" / "install.sh",
     ROOT.parent / "install" / "install_ios.sh",
     ROOT.parent / "install" / "install_windows.ps1",
+    ROOT.parent / "install" / "installer_selftest.py",
 ]
 
 
