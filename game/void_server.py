@@ -177,6 +177,11 @@ class VoidServer:
         self.next_player_id = 1
         self.game_log = []
 
+    def _send_error(self, conn, code: str, msg: str, **extra):
+        payload = {"type": "error", "code": code, "msg": msg}
+        payload.update(extra)
+        self._send(conn, payload)
+
     def start(self):
         server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -195,7 +200,7 @@ class VoidServer:
                 conn, addr = server_sock.accept()
                 with self.player_lock:
                     if len(self.players) >= MAX_PLAYERS:
-                        self._send(conn, {"type": "error", "msg": "Server voll."})
+                        self._send_error(conn, "SERVER_FULL", "Server voll.")
                         conn.close()
                         continue
                     pid = self.next_player_id
@@ -282,6 +287,10 @@ class VoidServer:
                 if name:
                     player.name = name
                     self._broadcast({"type": "rename", "id": player.id, "name": name})
+                else:
+                    self._send_error(player.conn, "INVALID_NAME", "Ungültiger Name.")
+            elif msg.get("type") not in (None, ""):
+                self._send_error(player.conn, "GAME_NOT_STARTED", "Spiel noch nicht gestartet.")
             return
 
         if not player.alive:
@@ -300,6 +309,9 @@ class VoidServer:
                 self.void_ai.record_move(player.id, player.x, player.y, "move")
                 self._check_signal_collection(player)
                 self._send_state_to(player)
+            else:
+                self._send_error(player.conn, "NOT_ENOUGH_ENERGY", "Zu wenig Energie für Bewegung.",
+                                 needed=FRAGMENT_MOVE_COST, energy=player.energy, action="move")
 
         elif action == "scan":
             if player.energy >= FRAGMENT_SCAN_COST:
@@ -318,6 +330,9 @@ class VoidServer:
                     result["void_detected"] = False
                     result["msg"] = f"Kein Signal. Distanz: ~{dist} Einheiten."
                 self._send(player.conn, result)
+            else:
+                self._send_error(player.conn, "NOT_ENOUGH_ENERGY", "Zu wenig Energie für Scan.",
+                                 needed=FRAGMENT_SCAN_COST, energy=player.energy, action="scan")
 
         elif action == "ping":
             # Sende kurzes Lebenszeichen an alle (kostet nichts, aber verrät Position kurz)
@@ -340,6 +355,9 @@ class VoidServer:
                 "regen": regen,
                 "energy": player.energy
             })
+
+        else:
+            self._send_error(player.conn, "UNKNOWN_ACTION", f"Unbekannte Aktion: {action}")
 
     def _check_signal_collection(self, player: Player):
         for sig in self.signals[:]:
