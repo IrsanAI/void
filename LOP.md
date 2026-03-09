@@ -17,8 +17,8 @@
 - [x] **`void_netcheck.py`** erstellt (lokale IP, Tailscale-IP, Port-Check 7777).
 - [x] Client-Fehlertexte bei Timeout verbessert (NAT/CGNAT/VPN-Hinweise + Netcheck-Befehl).
 - [x] **Relay-Prototyp v0.1** (Cloud/VPS): Host+Client verbinden outbound, Join per Room-Code (`void_relay.py`).
-- [ ] Heartbeat/Keepalive & Auto-Reconnect für Relay-Verbindungen.
-- [ ] Minimales Matchmaking (Room erstellen/joinen) mit Code-Lebensdauer.
+- [~] Relay-Robustheit: Join-Retry + Room-TTL/Cleanup + Host-Keepalive umgesetzt, Auto-Reconnect weiter offen.
+- [x] Minimales Matchmaking (Room erstellen/joinen) mit Code-Lebensdauer (Room-TTL).
 
 ## P1 — Session/Identity (globale VOID-ID)
 
@@ -50,15 +50,17 @@
 
 ## P3 — Dev/Quality
 
+- [~] PWA-Exploration gestartet (`docs/pwa_starter.html`, `PWA_STRATEGY.md`).
 - [x] KI-Architektur-Doku ergänzt (`AI_AGENT.md`) + Wartungshinweis im KI-Core.
-- [ ] Smoke-Test-Skript für Solo/Client/Server Startpfade.
-- [ ] Strukturierte Error-Codes im Client/Server (statt nur freie Texte).
+- [x] Smoke-Test-Skript für Kernpfade vorhanden (`game/void_smoke_test.py`).
+- [x] Strukturierte Error-Codes im Client/Server ergänzt (inkl. Client-Anzeige).
 - [ ] Kleine Telemetrie-Option (opt-in) für Verbindungsfehler-Statistik.
+- [x] Windows-Installer-Pfad ergänzt (`install/install_windows.ps1`) für Device-Parität.
 
 ---
 
 ## Nächster Sprint (vereinbart)
 
-1. Relay v0.1 stabilisieren (Retries, bessere Fehlermeldungen, optional mehrere Joiner/Rooms).
-2. Heartbeat/Keepalive + Auto-Reconnect für Relay-Verbindungen.
+1. Vollständiges Auto-Reconnect für Relay-Verbindungen (Host/Join) bei kurzen Unterbrechungen.
+2. Optional mehrere Joiner/Rooms + sauberer Room-Lifecycle unter Last.
 3. Kurzer End-to-End Testplan für Android ↔ iOS über Mobilfunk + VPN + Relay.

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>VOID PWA Starter (PoC)</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css" />
+  <style>
+    body { margin:0; background:#060608; color:#d0d0df; font-family: ui-monospace, monospace; }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 16px; }
+    h1 { margin: 0 0 8px; font-size: 20px; color:#e05555; letter-spacing: .08em; }
+    p { margin: 0 0 12px; color:#8d8da6; }
+    #term { border:1px solid #1f2230; border-radius:8px; padding:8px; background:#0c0d12; min-height:380px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>VOID PWA Starter // PoC</h1>
+    <p>xterm.js + Pyodide-Heartbeat als minimaler Browser-Prototyp.</p>
+    <div id="term"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.js"></script>
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.27.2/full/pyodide.js"></script>
+  <script>
+    const term = new Terminal({
+      convertEol: true,
+      cursorBlink: true,
+      theme: { background: '#0c0d12', foreground: '#d0d0df', cursor: '#e05555' }
+    });
+    term.open(document.getElementById('term'));
+
+    async function boot() {
+      term.writeln('Booting VOID PWA prototype...');
+      term.writeln('Loading Pyodide...');
+      const pyodide = await loadPyodide();
+      term.writeln('Pyodide online.');
+
+      pyodide.setStdout({
+        batched: (s) => term.writeln(s)
+      });
+
+      await pyodide.runPythonAsync(`
+import asyncio
+
+async def heartbeat():
+    for i in range(8):
+        print(f"[{i:02}] VOID is watching...")
+        await asyncio.sleep(0.5)
+
+await heartbeat()
+print("PoC complete. Next: grid render + input loop.")
+`);
+    }
+
+    boot().catch((err) => {
+      term.writeln('Boot failed: ' + String(err));
+    });
+  </script>
+</body>
+</html>

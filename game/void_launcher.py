@@ -6,6 +6,7 @@ Wähle: Solo / Multiplayer Client / Server starten
 import sys, os
 import ipaddress
 import subprocess
+import platform
 
 IS_WINDOWS = os.name == "nt"
 
@@ -31,6 +32,17 @@ def getch():
         termios.tcsetattr(fd, termios.TCSADRAIN, old)
 
 BASE = os.path.dirname(os.path.abspath(__file__))
+
+
+def _platform_edition_label() -> str:
+    if IS_WINDOWS:
+        return "Windows Edition"
+    if os.environ.get("TERMUX_VERSION"):
+        return "Termux Edition"
+    sysname = platform.system().lower()
+    if "darwin" in sysname:
+        return "Apple Shell Edition"
+    return "Terminal Edition"
 
 
 def _server_reachability_hint(ip_text: str) -> str:
@@ -199,7 +211,7 @@ def main():
     clear()
     print(b(BANNER))
     print()
-    print(b("  Psychologisches Survival · Termux Edition"))
+    print(b(f"  Psychologisches Survival · {_platform_edition_label()}"))
     print()
     print(f"  {g('[1]')} Solo spielen         {d('(Du vs VOID-KI)')}")
     print(f"  {c('[2]')} Multiplayer joinen   {d('(Client, Server-IP eingeben)')}")
