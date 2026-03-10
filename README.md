@@ -36,6 +36,10 @@ Der Installer erkennt iSH/a-Shell automatisch und installiert bei iSH die benöt
 
 ### Windows (PowerShell / Terminal)
 ```powershell
+irm https://raw.githubusercontent.com/IrsanAI/void/main/install/install_windows.ps1 | iex
+```
+Alternative (manuell):
+```powershell
 git clone https://github.com/IrsanAI/void.git
 cd void
 python game/void_launcher.py
@@ -45,6 +49,13 @@ python game/void_launcher.py
 → **[Zur Landing Page](https://irsanai.github.io/void)**
 
 ---
+
+
+## 🧭 Plattform-Status (Android / Apple / Windows)
+
+Eine aktuelle Matrix mit Gemeinsamkeiten, Unterschieden und offenen Lücken findest du hier:
+
+- [`PLATFORM_SUPPORT.md`](./PLATFORM_SUPPORT.md)
 
 ## 🍎 VOID auf iOS (Apple)
 
@@ -87,6 +98,16 @@ Du bist ein **Fragment** — unsichtbar, isoliert, gejagt. Die **VOID** ist kein
 
 ---
 
+## 🌐 PWA-Exploration (xterm.js + Pyodide)
+
+Deine Idee einer browserbasierten VOID-Version ist technisch sinnvoll und als PoC vorbereitet:
+
+- Strategie/Analyse: [`PWA_STRATEGY.md`](./PWA_STRATEGY.md)
+- Starter-Prototyp: [`docs/pwa_starter.html`](./docs/pwa_starter.html)
+- PWA-Basis: [`docs/manifest.webmanifest`](./docs/manifest.webmanifest) + [`docs/sw.js`](./docs/sw.js)
+
+> Ziel des Starters: xterm.js + Pyodide laden, interaktives Mini-Grid spielen (WASD/Pfeile) und mobil via Touch-D-Pad steuern.
+
 ## 🚀 Starten
 
 ```bash
@@ -95,6 +116,9 @@ python3 ~/games/void/game/void_launcher.py
 
 # — oder nach Neustart —
 void
+
+# Schnell-Diagnose
+void doctor
 ```
 
 ### Manuell (Solo Enhanced)
@@ -191,6 +215,25 @@ Schneller VPN/Port-Check:
 python3 ~/games/void/game/void_netcheck.py 10.x.x.x
 ```
 
+Lokaler Smoke-Test (ohne externe Dienste):
+
+```bash
+python3 ~/games/void/game/void_smoke_test.py
+```
+
+
+Installations-Selftest (läuft automatisch in Installern, manuell möglich):
+
+```bash
+python3 ~/games/void/install/installer_selftest.py
+```
+
+Doctor-Diagnose (manuell):
+
+```bash
+python3 ~/games/void/game/void_doctor.py
+```
+
 
 ---
 
@@ -201,7 +244,7 @@ Wenn direkte IP-Verbindungen trotz VPN nicht stabil sind, kannst du den Relay-Pr
 
 ```bash
 # Auf einem erreichbaren Server/VPS
-python3 ~/games/void/game/void_relay.py server --listen-port 8787
+python3 ~/games/void/game/void_relay.py server --listen-port 8787 --room-ttl 120
 ```
 
 Dann in `void_launcher.py`:
@@ -209,6 +252,15 @@ Dann in `void_launcher.py`:
 - Join: `[5] Relay (Beta)` → Modus `2` → gleicher Relay-Host/Port + Room-Code
 
 > Hinweis: v0.1 ist ein einfacher Tunnel-Prototyp (1 Host + 1 Join pro Room).
+
+Der Host erhält während der Wartephase periodische Keepalive-Events vom Relay, damit Timeouts/Room-Ablauf transparent bleiben.
+
+Join versucht standardmäßig bis zu 20s erneut zu pairen (wenn der Host-Room noch nicht sichtbar ist):
+
+```bash
+python3 ~/games/void/game/void_relay.py join --relay-host <host> --room VOID42 --retry-seconds 20
+```
+
 
 ## 👨‍💻 Entwickelt von
 

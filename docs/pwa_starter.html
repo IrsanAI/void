@@ -1,0 +1,750 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#0c0d12" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <title>VOID PWA Starter (PoC)</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css" />
+  <style>
+    :root { color-scheme: dark; }
+    body { margin:0; background:#05060a; color:#d0d0df; font-family: ui-monospace, monospace; }
+    .wrap { max-width: 1400px; margin: 0 auto; padding: 16px; }
+    h1 { margin: 0 0 8px; font-size: 22px; color:#e05555; letter-spacing: .08em; }
+    p { margin: 0 0 12px; color:#8d8da6; }
+    #term-shell { border:1px solid #1f2230; border-radius:10px; padding:10px; background:#0c0d12; min-height:820px; transition: filter .12s ease, box-shadow .12s ease; box-shadow: 0 0 0 rgba(224,85,85,0); }
+    #term-shell.glitch { filter: saturate(1.5) contrast(1.18) hue-rotate(-18deg); box-shadow: 0 0 18px rgba(224,85,85,.35); }
+    .controls { margin: 10px 0 14px; display:flex; gap:8px; flex-wrap: wrap; }
+    .btn { border:1px solid #303449; border-radius:6px; background:#10131c; color:#d0d0df; padding:8px 12px; cursor:pointer; font-size:14px; }
+    .btn:hover { border-color:#e05555; color:#ffb4b4; }
+    .hint { font-size: 13px; color:#7c81a8; }
+    .touchpad { margin-top: 12px; display:grid; grid-template-columns: repeat(8, minmax(56px, auto)); gap:8px; width:max-content; user-select:none; }
+    .dpad { min-height: 48px; }
+    .status { margin-top: 8px; font-size: 12px; color: #7e92b0; font-family: ui-monospace, monospace; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>VOID PWA Starter // Evolution PoC</h1>
+    <p>Großes 21x21-Spielfeld, versteckte VOID, Scan/Ping/Listen/Rast, psychologische Layer und stylische Terminal-Overlays.</p>
+
+    <div class="controls">
+      <button class="btn" id="boot-btn">Boot</button>
+      <button class="btn" id="toggle-btn">Pause</button>
+      <button class="btn" id="reset-btn">Reset</button>
+      <button class="btn" id="sound-btn">Sound: ON</button>
+    </div>
+    <div class="hint">Move: ↑ ↓ ← → oder WASD · E=Scan · Q=Ping · F=Listen · R=Rast.</div>
+    <div class="hint">Prinzip wie Termux: VOID bleibt unsichtbar, bis du aktiv Informationen riskierst.</div>
+
+    <div id="term-shell"><div id="term"></div></div>
+
+    <div class="touchpad" aria-label="Touch controls">
+      <button class="btn dpad" data-dir="up">↑</button>
+      <button class="btn dpad" data-dir="left">←</button>
+      <button class="btn dpad" data-dir="down">↓</button>
+      <button class="btn dpad" data-dir="right">→</button>
+      <button class="btn dpad" data-action="scan">SCAN</button>
+      <button class="btn dpad" data-action="ping">PING</button>
+      <button class="btn dpad" data-action="listen">LISTEN</button>
+      <button class="btn dpad" data-action="rest">RAST</button>
+    </div>
+    <div class="status" id="status">Status: idle</div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.js"></script>
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.27.2/full/pyodide.js"></script>
+  <script>
+    const term = new Terminal({
+      convertEol: true,
+      cursorBlink: true,
+      rows: 50,
+      cols: 120,
+      fontSize: 22,
+      lineHeight: 1.14,
+      theme: { background: '#0c0d12', foreground: '#d0d0df', cursor: '#e05555' }
+    });
+    term.open(document.getElementById('term'));
+    term.focus();
+
+    let pyodide = null;
+    let running = false;
+    let loopId = null;
+    let pyQueue = Promise.resolve();
+    let lastInputTs = null;
+    let booting = false;
+    let autoBootStarted = false;
+    let audioCtx = null;
+    let soundEnabled = true;
+    let heartbeatTimer = null;
+
+    const shell = document.getElementById('term-shell');
+    const statusEl = document.getElementById('status');
+
+    shell.addEventListener('pointerdown', () => term.focus());
+
+    function setStatus(msg) {
+      if (statusEl) statusEl.textContent = `Status: ${msg}`;
+    }
+
+    function sleep(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
+
+    function glitchPulse() {
+      shell.classList.add('glitch');
+      setTimeout(() => shell.classList.remove('glitch'), 120);
+    }
+
+    function dangerHaptic() {
+      if (navigator.vibrate) navigator.vibrate([55, 35, 65]);
+    }
+
+    function ensureAudio() {
+      if (!soundEnabled) return null;
+      if (!audioCtx) {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (!Ctx) return null;
+        audioCtx = new Ctx();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume().catch(() => {});
+      }
+      return audioCtx;
+    }
+
+    function beep(freq = 280, ms = 80, type = 'sine', gain = 0.06) {
+      const ctx = ensureAudio();
+      if (!ctx) return;
+      const osc = ctx.createOscillator();
+      const amp = ctx.createGain();
+      osc.type = type;
+      osc.frequency.value = freq;
+      amp.gain.setValueAtTime(gain, ctx.currentTime);
+      amp.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + ms / 1000);
+      osc.connect(amp).connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + ms / 1000);
+    }
+
+    function playActionSound(name) {
+      if (name === 'scan') { beep(980, 70, 'triangle', 0.08); setTimeout(() => beep(660, 70, 'triangle', 0.07), 60); }
+      else if (name === 'ping') { beep(1200, 45, 'square', 0.06); setTimeout(() => beep(860, 55, 'square', 0.05), 45); }
+      else if (name === 'listen') { beep(330, 100, 'sine', 0.05); }
+      else if (name === 'rest') { beep(220, 120, 'sine', 0.04); }
+      else { beep(420, 55, 'sine', 0.05); }
+    }
+
+    function startHeartbeat() {
+      if (heartbeatTimer) clearInterval(heartbeatTimer);
+      heartbeatTimer = setInterval(async () => {
+        if (!running || !pyodide || !soundEnabled) return;
+        const danger = await queuePython('abs(void_x-player_x) + abs(void_y-player_y)');
+        if (danger === null || danger === undefined) return;
+        const dist = Number(danger);
+        const base = dist <= 2 ? 210 : (dist <= 5 ? 300 : 420);
+        const dur = dist <= 2 ? 100 : 70;
+        beep(base, dur, 'sine', dist <= 2 ? 0.08 : 0.045);
+      }, 900);
+    }
+
+    function stopHeartbeat() {
+      if (heartbeatTimer) {
+        clearInterval(heartbeatTimer);
+        heartbeatTimer = null;
+      }
+    }
+
+    function queuePython(code) {
+      if (!pyodide) return Promise.resolve(null);
+      pyQueue = pyQueue.then(() => pyodide.runPythonAsync(code)).catch((err) => {
+        term.writeln('Python queue error: ' + String(err));
+        return null;
+      });
+      return pyQueue;
+    }
+
+    async function renderNow() {
+      const out = await queuePython('frame()');
+      if (!out) return;
+      term.write('\x1b[2J\x1b[H');
+      term.write(String(out).replace(/\n/g, '\r\n'));
+    }
+
+    async function runBootSequence() {
+      setStatus('booting...');
+      term.writeln('[ OK ] Initializing Neural Void Network...');
+      await sleep(260);
+      term.writeln('[ OK ] Attaching psychometric channels...');
+      await sleep(260);
+      term.writeln('[ WARN ] Emotional leakage detected...');
+      await sleep(300);
+      term.writeln('[ WARN ] Rival fragments online...');
+      await sleep(320);
+      term.writeln('Loading Pyodide...');
+    }
+
+    async function boot() {
+      if (pyodide || booting) return;
+      booting = true;
+      term.writeln('Booting VOID PWA prototype...');
+      await runBootSequence();
+      pyodide = await loadPyodide();
+      ensureAudio();
+      term.writeln('Pyodide online. Preparing simulation...');
+
+      pyodide.setStdout({ batched: (s) => term.writeln(s) });
+
+      await pyodide.runPythonAsync(`
+import random
+from collections import deque
+
+GRID = 21
+MAX_ENERGY = 100
+
+C_RESET = "\\033[0m"
+C_DIM = "\\033[90m"
+C_RED = "\\033[91m"
+C_GREEN = "\\033[92m"
+C_YELLOW = "\\033[93m"
+C_BLUE = "\\033[94m"
+C_MAGENTA = "\\033[95m"
+C_CYAN = "\\033[96m"
+C_BOLD = "\\033[1m"
+
+VOID_MESSAGES = {
+    "paranoia": [
+        "Ich sehe dich. Schon seit einer Weile.",
+        "Deine letzte Bewegung war vorhersehbar.",
+        "Du glaubst du weißt wo ich bin. Ich weiß es besser.",
+    ],
+    "loneliness": [
+        "Du bist allein hier. Das weißt du.",
+        "Die anderen Fragmente helfen dir nicht.",
+        "Isolation schützt dich. Oder zerstört dich.",
+    ],
+    "rivalry": [
+        "Der Führende zieht die VOID an.",
+        "Score ist nur ein anderes Wort für Risiko.",
+        "Echo-Agent ist schneller als du.",
+    ],
+    "whisper": ["...", "psst.", "tick. tack.", "ich bin hier."]
+}
+
+tick_count = 0
+player_x, player_y = GRID // 2, GRID // 2
+void_x, void_y = 1, 1
+rival_x, rival_y = GRID - 2, GRID - 2
+
+signals = []
+score = 0
+rival_score = 0
+energy = 78
+
+paranoia = 26
+bond = 42
+rivalry_pressure = 35
+stress = 0
+
+game_over = False
+reveal_turns = 0
+void_lock_turns = 0
+last_void_msg = ""
+log_lines = deque(maxlen=5)
+input_deltas = deque(maxlen=8)
+
+
+def color(txt, c):
+    return c + txt + C_RESET
+
+
+def _spawn_signal(exclude=None):
+    while True:
+        sx, sy = random.randint(0, GRID-1), random.randint(0, GRID-1)
+        if exclude and (sx, sy) in exclude:
+            continue
+        return (sx, sy)
+
+
+def _seed_signals(count=9):
+    global signals
+    used = {(player_x, player_y), (void_x, void_y), (rival_x, rival_y)}
+    signals = []
+    for _ in range(count):
+        s = _spawn_signal(used)
+        used.add(s)
+        signals.append(s)
+
+
+def _distance(ax, ay, bx, by):
+    return abs(ax - bx) + abs(ay - by)
+
+
+def _nearest_signal(x, y):
+    if not signals:
+        return None
+    return min(signals, key=lambda s: _distance(x, y, s[0], s[1]))
+
+
+def _collect_if_present(x, y, who):
+    global score, rival_score, signals
+    p = (x, y)
+    if p in signals:
+        signals = [s for s in signals if s != p]
+        refill_ex = set(signals) | {(player_x, player_y), (void_x, void_y), (rival_x, rival_y)}
+        signals.append(_spawn_signal(refill_ex))
+        if who == 'player':
+            score += 1
+            log_lines.append('⚡ Signal absorbiert (+1 Score).')
+        else:
+            rival_score += 1
+            log_lines.append('◆ Echo-Agent punktet. Leaderboard verschiebt sich.')
+
+
+def _move_toward(v, t):
+    if v < t:
+        return v + 1
+    if v > t:
+        return v - 1
+    return v
+
+
+def _drift_bond(amount):
+    global bond
+    bond = max(0, min(100, bond + amount))
+
+
+def _drift_paranoia(amount):
+    global paranoia
+    paranoia = max(0, min(100, paranoia + amount))
+
+
+def _add_energy(amount):
+    global energy
+    energy = max(0, min(MAX_ENERGY, energy + amount))
+
+
+def _consume_energy(cost):
+    global energy
+    if energy < cost:
+        log_lines.append('⚠ Nicht genug Energie: ' + str(cost) + ' benötigt.')
+        _drift_paranoia(4)
+        return False
+    energy -= cost
+    return True
+
+
+def note_input_delta(delta_ms):
+    global stress
+    if delta_ms <= 0:
+        return
+    input_deltas.append(delta_ms)
+    if len(input_deltas) >= 3:
+        avg = sum(input_deltas) / len(input_deltas)
+        spread = max(input_deltas) - min(input_deltas)
+        stress = max(0, min(100, int((spread / max(1, avg)) * 100)))
+
+
+def move_player(dx, dy):
+    global player_x, player_y
+    if game_over:
+        return
+    if not _consume_energy(2):
+        return
+    player_x = max(0, min(GRID-1, player_x + dx))
+    player_y = max(0, min(GRID-1, player_y + dy))
+    _collect_if_present(player_x, player_y, 'player')
+
+
+def action_scan():
+    global reveal_turns, void_lock_turns
+    if game_over:
+        return
+    if not _consume_energy(14):
+        return
+    reveal_turns = 4
+    void_lock_turns = max(void_lock_turns, 4)
+    _drift_paranoia(10)
+    log_lines.append('⚠ SCAN: VOID sichtbar (4 Ticks), aber dein Standort wurde exponiert.')
+
+
+def action_ping():
+    global void_lock_turns
+    if game_over:
+        return
+    if not _consume_energy(10):
+        return
+    nearest = _nearest_signal(player_x, player_y)
+    if nearest:
+        d = _distance(player_x, player_y, nearest[0], nearest[1])
+        log_lines.append('📡 PING: nächstes Signal in Distanz ' + str(d) + '.')
+    else:
+        log_lines.append('📡 PING: keine Signale verfügbar.')
+    _drift_bond(10)
+    _drift_paranoia(3)
+    void_lock_turns = max(void_lock_turns, 3)
+
+
+def action_listen():
+    if game_over:
+        return
+    if not _consume_energy(6):
+        return
+    d = _distance(player_x, player_y, void_x, void_y)
+    if d <= 3:
+        log_lines.append('🎧 LISTEN: kaltes Flüstern direkt neben dir...')
+    elif d <= 6:
+        log_lines.append('🎧 LISTEN: statische Echos in mittlerer Nähe.')
+    else:
+        log_lines.append('🎧 LISTEN: nur fernes Rauschen.')
+    _drift_paranoia(-6)
+
+
+def action_rest():
+    if game_over:
+        return
+    gain = random.randint(8, 16)
+    _add_energy(gain)
+    _drift_paranoia(2)
+    log_lines.append('🛌 RAST: +' + str(gain) + ' Energie. Du bleibst verwundbar.')
+
+
+def _rival_tick():
+    global rival_x, rival_y
+    target = _nearest_signal(rival_x, rival_y)
+    if not target:
+        return
+    tx, ty = target
+    if random.random() < 0.5:
+        rival_x = _move_toward(rival_x, tx)
+    else:
+        rival_y = _move_toward(rival_y, ty)
+    _collect_if_present(rival_x, rival_y, 'rival')
+
+
+def _void_target():
+    player_dist = _distance(void_x, void_y, player_x, player_y)
+    rival_dist = _distance(void_x, void_y, rival_x, rival_y)
+    player_leads = score > rival_score
+    rival_leads = rival_score > score
+
+    if void_lock_turns > 0:
+        return (player_x, player_y)
+
+    if player_leads and random.random() < 0.74:
+        return (player_x, player_y)
+    if rival_leads and random.random() < 0.74:
+        return (rival_x, rival_y)
+
+    if player_dist <= rival_dist:
+        return (player_x, player_y)
+    return (rival_x, rival_y)
+
+
+def _void_whisper():
+    ctx = 'paranoia'
+    if rivalry_pressure > 60:
+        ctx = 'rivalry'
+    elif bond < 30:
+        ctx = 'loneliness'
+    if random.random() < 0.35:
+        return random.choice(VOID_MESSAGES['whisper'])
+    return random.choice(VOID_MESSAGES[ctx])
+
+
+def tick_world():
+    global tick_count, void_x, void_y, reveal_turns, void_lock_turns
+    global game_over, rivalry_pressure, paranoia, rival_x, rival_y, last_void_msg
+    if game_over:
+        return
+
+    tick_count += 1
+
+    if tick_count % 2 == 0:
+        _rival_tick()
+
+    tx, ty = _void_target()
+    if tick_count % 2 == 0:
+        void_x = _move_toward(void_x, tx)
+        if random.random() < 0.85:
+            void_y = _move_toward(void_y, ty)
+
+    d_player = _distance(void_x, void_y, player_x, player_y)
+    d_rival = _distance(void_x, void_y, rival_x, rival_y)
+
+    if d_player == 0:
+        game_over = True
+        log_lines.append('☠ DIE VOID HAT DICH ERWISCHT.')
+
+    if d_rival == 0:
+        log_lines.append('💀 VOID hat Echo-Agent verschluckt. Jagd auf dich intensiviert.')
+        rival_x, rival_y = GRID - 2, GRID - 2
+
+    rivalry_pressure = max(0, min(100, 50 + (score - rival_score) * 9))
+    paranoia = max(0, min(100, 100 - d_player * 7 + stress // 5 + (10 if void_lock_turns > 0 else 0)))
+
+    _add_energy(2)
+    _drift_bond(-1)
+
+    if tick_count % 3 == 0:
+        last_void_msg = _void_whisper()
+
+    if reveal_turns > 0:
+        reveal_turns -= 1
+    if void_lock_turns > 0:
+        void_lock_turns -= 1
+
+
+def _bar(value, length=12, color_ok=C_GREEN, color_mid=C_YELLOW, color_bad=C_RED):
+    v = max(0, min(100, int(value)))
+    fill = int((v / 100) * length)
+    empty = length - fill
+    col = color_ok if v > 65 else (color_mid if v > 35 else color_bad)
+    return col + ('█' * fill) + C_DIM + ('░' * empty) + C_RESET
+
+
+def _render_cell(x, y):
+    if x == player_x and y == player_y:
+        return color('◉ ', C_GREEN)
+    if x == rival_x and y == rival_y:
+        return color('◆ ', C_CYAN)
+    if reveal_turns > 0 and x == void_x and y == void_y:
+        return color('▓ ', C_RED)
+    if (x, y) in signals:
+        return color('◈ ', C_YELLOW)
+    return color('· ', C_DIM)
+
+
+def frame():
+    rows = []
+    rows.append(color('VOID MINI LOOP // tick=' + str(tick_count), C_BOLD + C_RED))
+    rows.append(color('Score YOU/ECHO: ', C_CYAN) + str(score) + ' / ' + str(rival_score) + '    ' + color('Energy:', C_CYAN) + ' ' + str(energy) + '/' + str(MAX_ENERGY))
+    rows.append(color('Paranoia ', C_RED) + _bar(paranoia, 10, C_BLUE, C_MAGENTA, C_RED) + '   ' + color('Bindung ', C_BLUE) + _bar(bond, 10, C_CYAN, C_BLUE, C_MAGENTA) + '   ' + color('Rivalität ', C_YELLOW) + _bar(rivalry_pressure, 10, C_GREEN, C_YELLOW, C_RED))
+    rows.append(color('Kontrollen: ', C_DIM) + color('WASD/Arrows', C_BOLD) + ' Move  ' + color('E', C_BOLD) + ' Scan  ' + color('Q', C_BOLD) + ' Ping  ' + color('F', C_BOLD) + ' Listen  ' + color('R', C_BOLD) + ' Rast')
+    rows.append(color('Legend: ◉ du  ◆ echo-agent  ◈ signal  ▓ VOID(nur mit Scan sichtbar)', C_DIM))
+    if last_void_msg:
+        rows.append(color('VOID: ' + last_void_msg, C_RED))
+    rows.append('')
+
+    border = color('┌' + '─' * (GRID * 2) + '┐', C_DIM)
+    rows.append(border)
+    for y in range(GRID):
+        line = ''.join(_render_cell(x, y) for x in range(GRID))
+        rows.append(color('│', C_DIM) + line + color('│', C_DIM))
+    rows.append(color('└' + '─' * (GRID * 2) + '┘', C_DIM))
+
+    d = _distance(player_x, player_y, void_x, void_y)
+    rows.append('')
+    rows.append('Entfernung zur VOID (geschätzt): ' + str(d) + ('  [SCAN aktiv]' if reveal_turns > 0 else '  [unsichtbar]'))
+    if void_lock_turns > 0:
+        rows.append(color('⚠ Deine letzten Aktionen haben dich verraten: VOID-Lock ' + str(void_lock_turns) + ' Tick(s).', C_YELLOW))
+    if d <= 2:
+        rows.append(color('⚠ PARANOIA-SPIKE: kalte Nähe erkannt.', C_RED))
+    if game_over:
+        rows.append(color('☠ GAME OVER — Reset drücken.', C_RED))
+
+    rows.append('')
+    rows.append(color('Overlay:', C_DIM))
+    if log_lines:
+        for ln in list(log_lines):
+            rows.append('  - ' + ln)
+    else:
+        rows.append('  - Stille. Nur statisches Rauschen...')
+
+    return '\n'.join(rows)
+
+
+def step():
+    tick_world()
+    return frame()
+
+
+def reset_state():
+    global tick_count, player_x, player_y, void_x, void_y, rival_x, rival_y
+    global score, rival_score, energy, paranoia, bond, rivalry_pressure
+    global stress, game_over, reveal_turns, void_lock_turns, log_lines, input_deltas, last_void_msg
+
+    tick_count = 0
+    player_x, player_y = GRID // 2, GRID // 2
+    void_x, void_y = 1, 1
+    rival_x, rival_y = GRID - 2, GRID - 2
+
+    score = 0
+    rival_score = 0
+    energy = 78
+    paranoia = 26
+    bond = 42
+    rivalry_pressure = 35
+    stress = 0
+
+    game_over = False
+    reveal_turns = 0
+    void_lock_turns = 0
+    last_void_msg = ""
+    log_lines = deque(maxlen=5)
+    input_deltas = deque(maxlen=8)
+
+    _seed_signals(9)
+    log_lines.append('Sitzung initialisiert. VOID bleibt unsichtbar bis SCAN.')
+
+
+reset_state()
+`);
+
+      running = true;
+      startLoop();
+      startHeartbeat();
+      await renderNow();
+      setStatus(soundEnabled ? 'running (sound on)' : 'running (sound off)');
+      term.focus();
+      booting = false;
+    }
+
+    function startLoop() {
+      if (loopId) clearInterval(loopId);
+      loopId = setInterval(async () => {
+        if (!running || !pyodide) return;
+        const out = await queuePython('step()');
+        if (!out) return;
+        term.write('\x1b[2J\x1b[H');
+        term.write(String(out).replace(/\n/g, '\r\n'));
+
+        const danger = await queuePython('abs(void_x-player_x) + abs(void_y-player_y) <= 2');
+        if (danger) {
+          glitchPulse();
+          dangerHaptic();
+          beep(140, 110, 'sawtooth', 0.09);
+        }
+      }, 560);
+    }
+
+    async function move(dx, dy) {
+      if (!pyodide || !running) return;
+      const now = Date.now();
+      if (lastInputTs !== null) {
+        const delta = now - lastInputTs;
+        await queuePython(`note_input_delta(${delta})`);
+      }
+      lastInputTs = now;
+      await queuePython(`move_player(${dx}, ${dy})`);
+      playActionSound('move');
+      await renderNow();
+    }
+
+    async function action(name) {
+      if (!pyodide || !running) return;
+      if (name === 'scan') await queuePython('action_scan()');
+      if (name === 'ping') await queuePython('action_ping()');
+      if (name === 'listen') await queuePython('action_listen()');
+      if (name === 'rest') await queuePython('action_rest()');
+      playActionSound(name);
+      await renderNow();
+      glitchPulse();
+    }
+
+    function handleDirection(dir) {
+      if (dir === 'up') move(0, -1);
+      if (dir === 'down') move(0, 1);
+      if (dir === 'left') move(-1, 0);
+      if (dir === 'right') move(1, 0);
+    }
+
+    document.addEventListener('keydown', (e) => {
+      const key = e.key.toLowerCase();
+      if (key === 'enter' && !pyodide && !booting) {
+        e.preventDefault();
+        boot().catch(() => {});
+        return;
+      }
+
+      if (['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d','q','e','f','r'].includes(key)) {
+        e.preventDefault();
+        term.focus();
+      }
+
+      if (key === 'arrowup' || key === 'w') handleDirection('up');
+      if (key === 'arrowdown' || key === 's') handleDirection('down');
+      if (key === 'arrowleft' || key === 'a') handleDirection('left');
+      if (key === 'arrowright' || key === 'd') handleDirection('right');
+      if (key === 'e') action('scan');
+      if (key === 'q') action('ping');
+      if (key === 'f') action('listen');
+      if (key === 'r') action('rest');
+    }, { capture: true });
+
+    document.querySelectorAll('[data-dir]').forEach((btn) => {
+      const dir = btn.getAttribute('data-dir');
+      btn.addEventListener('click', () => handleDirection(dir));
+      btn.addEventListener('touchstart', (ev) => {
+        ev.preventDefault();
+        handleDirection(dir);
+      }, { passive: false });
+    });
+
+    document.querySelectorAll('[data-action]').forEach((btn) => {
+      const name = btn.getAttribute('data-action');
+      btn.addEventListener('click', () => action(name));
+      btn.addEventListener('touchstart', (ev) => {
+        ev.preventDefault();
+        action(name);
+      }, { passive: false });
+    });
+
+    document.getElementById('boot-btn').addEventListener('click', () => boot().catch(err => {
+      booting = false;
+      term.writeln('Boot failed: ' + String(err));
+      setStatus('boot failed');
+    }));
+
+    document.getElementById('toggle-btn').addEventListener('click', () => {
+      running = !running;
+      document.getElementById('toggle-btn').textContent = running ? 'Pause' : 'Resume';
+      setStatus(running ? 'running' : 'paused');
+      if (running) startHeartbeat(); else stopHeartbeat();
+    });
+
+    document.getElementById('sound-btn').addEventListener('click', () => {
+      soundEnabled = !soundEnabled;
+      document.getElementById('sound-btn').textContent = soundEnabled ? 'Sound: ON' : 'Sound: OFF';
+      if (soundEnabled) {
+        ensureAudio();
+        startHeartbeat();
+        beep(760, 60, 'triangle', 0.05);
+      } else {
+        stopHeartbeat();
+      }
+      setStatus(soundEnabled ? 'running (sound on)' : 'running (sound off)');
+    });
+
+    document.getElementById('reset-btn').addEventListener('click', async () => {
+      if (!pyodide) return;
+      await queuePython('reset_state()');
+      await renderNow();
+      lastInputTs = null;
+      glitchPulse();
+      setStatus(soundEnabled ? 'running (sound on)' : 'running (sound off)');
+    });
+
+    window.addEventListener('offline', () => {
+      term.writeln('OFFLINE MODE: Kein Netz. Niemand kann dich hören. Nur wir beide.');
+      setStatus('offline');
+    });
+
+    window.addEventListener('load', () => {
+      if (!autoBootStarted) {
+        autoBootStarted = true;
+        boot().catch(err => {
+          booting = false;
+          term.writeln('Boot failed: ' + String(err));
+          setStatus('boot failed');
+        });
+      }
+    });
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>
