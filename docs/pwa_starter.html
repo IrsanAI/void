@@ -18,14 +18,7 @@
     .btn { border:1px solid #303449; border-radius:6px; background:#10131c; color:#d0d0df; padding:6px 10px; cursor:pointer; }
     .btn:hover { border-color:#e05555; color:#ffb4b4; }
     .hint { font-size: 12px; color:#6f7394; }
-    .touchpad {
-      margin-top: 12px;
-      display: grid;
-      grid-template-columns: 52px 52px 52px;
-      gap: 8px;
-      width: max-content;
-      user-select: none;
-    }
+    .touchpad { margin-top: 12px; display:grid; grid-template-columns: 52px 52px 52px; gap:8px; width:max-content; user-select:none; }
     .dpad { height: 52px; width: 52px; }
     .dpad.empty { visibility: hidden; }
     .status { margin-top: 8px; font-size: 12px; color: #7e92b0; font-family: ui-monospace, monospace; }
@@ -34,7 +27,7 @@
 <body>
   <div class="wrap">
     <h1>VOID PWA Starter // PoC</h1>
-    <p>xterm.js + Pyodide: interaktives 9x9-Mini-VOID mit Signalen, Paranoia und Glitch-Effekt (WASD/Pfeiltasten).</p>
+    <p>xterm.js + Pyodide: interaktives 9x9-Mini-VOID mit Signalen, Paranoia, Stress-Tracking und Glitch-Effekt.</p>
 
     <div class="controls">
       <button class="btn" id="boot-btn">Boot</button>
@@ -68,22 +61,36 @@
       theme: { background: '#0c0d12', foreground: '#d0d0df', cursor: '#e05555' }
     });
     term.open(document.getElementById('term'));
+    term.focus();
 
     let pyodide = null;
     let running = false;
     let loopId = null;
     let pyQueue = Promise.resolve();
+    let lastInputTs = null;
+    let booting = false;
+    let autoBootStarted = false;
 
     const shell = document.getElementById('term-shell');
     const statusEl = document.getElementById('status');
+
+    shell.addEventListener('pointerdown', () => term.focus());
 
     function setStatus(msg) {
       if (statusEl) statusEl.textContent = `Status: ${msg}`;
     }
 
+    function sleep(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
     function glitchPulse() {
       shell.classList.add('glitch');
-      setTimeout(() => shell.classList.remove('glitch'), 80);
+      setTimeout(() => shell.classList.remove('glitch'), 100);
+    }
+
+    function dangerHaptic() {
+      if (navigator.vibrate) navigator.vibrate([45, 25, 45]);
     }
 
     function queuePython(code) {
@@ -104,11 +111,22 @@
       term.write(String(out).replace(/\n/g, '\r\n'));
     }
 
-    async function boot() {
-      if (pyodide) return;
+    async function runBootSequence() {
       setStatus('booting...');
-      term.writeln('Booting VOID PWA prototype...');
+      term.writeln('[ OK ] Initializing Neural Void Network...');
+      await sleep(450);
+      term.writeln('[ OK ] Attaching terminal cortex...');
+      await sleep(450);
+      term.writeln('[ WARN ] Unauthorized consciousness detected...');
+      await sleep(550);
       term.writeln('Loading Pyodide...');
+    }
+
+    async function boot() {
+      if (pyodide || booting) return;
+      booting = true;
+      term.writeln('Booting VOID PWA prototype...');
+      await runBootSequence();
       pyodide = await loadPyodide();
       term.writeln('Pyodide online. Preparing simulation...');
 
@@ -116,6 +134,7 @@
 
       await pyodide.runPythonAsync(`
 import random
+from collections import deque
 
 tick_count = 0
 GRID = 9
@@ -124,7 +143,10 @@ void_x, void_y = 1, 1
 signals = []
 score = 0
 paranoia = 0
+stress = 0
 game_over = False
+fake_signal = None
+input_deltas = deque(maxlen=6)
 
 def _spawn_signal(exclude=None):
     while True:
@@ -134,13 +156,16 @@ def _spawn_signal(exclude=None):
         return (sx, sy)
 
 def reset_state():
-    global player_x, player_y, void_x, void_y, tick_count, signals, score, paranoia, game_over
+    global player_x, player_y, void_x, void_y, tick_count, signals, score, paranoia, game_over, stress, fake_signal, input_deltas
     player_x, player_y = 4, 4
     void_x, void_y = 1, 1
     tick_count = 0
     score = 0
     paranoia = 0
+    stress = 0
     game_over = False
+    fake_signal = None
+    input_deltas = deque(maxlen=6)
     signals = []
     used = {(player_x, player_y), (void_x, void_y)}
     for _ in range(3):
@@ -150,6 +175,16 @@ def reset_state():
 
 def _distance():
     return abs(void_x-player_x) + abs(void_y-player_y)
+
+def note_input_delta(delta_ms):
+    global stress
+    if delta_ms <= 0:
+        return
+    input_deltas.append(delta_ms)
+    if len(input_deltas) >= 3:
+        avg = sum(input_deltas) / len(input_deltas)
+        spread = max(input_deltas) - min(input_deltas)
+        stress = max(0, min(100, int((spread / max(1, avg)) * 100)))
 
 def _collect_signals():
     global score, signals
@@ -173,7 +208,7 @@ def _move_toward(v, t):
     return v
 
 def tick_void():
-    global void_x, void_y, tick_count, paranoia, game_over
+    global void_x, void_y, tick_count, paranoia, game_over, fake_signal
     if game_over:
         return
     tick_count += 1
@@ -186,10 +221,15 @@ def tick_void():
     if dist == 0:
         game_over = True
 
+    if paranoia > 85 and tick_count % 5 == 0:
+        fake_signal = _spawn_signal({(player_x, player_y), (void_x, void_y)})
+    elif paranoia < 70:
+        fake_signal = None
+
 def frame():
     rows = []
     rows.append('VOID MINI LOOP // tick=' + str(tick_count))
-    rows.append('Score: ' + str(score) + '   Paranoia: ' + str(paranoia) + '%')
+    rows.append('Score: ' + str(score) + '   Paranoia: ' + str(paranoia) + '%' + '   Stress: ' + str(stress) + '%')
     rows.append('')
     for y in range(GRID):
         line = []
@@ -200,6 +240,8 @@ def frame():
                 line.append('▓')
             elif (x, y) in signals:
                 line.append('◈')
+            elif fake_signal and (x, y) == fake_signal:
+                line.append('?')
             else:
                 line.append('·')
         rows.append(''.join(line))
@@ -208,6 +250,8 @@ def frame():
     rows.append('Distance to VOID: ' + str(dist))
     if dist <= 2:
         rows.append('⚠ PARANOIA SPIKE ⚠')
+    if fake_signal:
+        rows.append('⚠ Distortion detected: ghost signal appears')
     if game_over:
         rows.append('☠ VOID captured you — press Reset')
     return '\\n'.join(rows)
@@ -223,6 +267,8 @@ reset_state()
       startLoop();
       await renderNow();
       setStatus('running');
+      term.focus();
+      booting = false;
     }
 
     function startLoop() {
@@ -234,12 +280,23 @@ reset_state()
         term.write('\x1b[2J\x1b[H');
         term.write(String(out).replace(/\n/g, '\r\n'));
         const danger = await queuePython('abs(void_x-player_x) + abs(void_y-player_y) <= 2');
-        if (danger) glitchPulse();
+        if (danger) {
+          glitchPulse();
+          dangerHaptic();
+        }
       }, 550);
     }
 
     async function move(dx, dy) {
       if (!pyodide || !running) return;
+
+      const now = Date.now();
+      if (lastInputTs !== null) {
+        const delta = now - lastInputTs;
+        await queuePython(`note_input_delta(${delta})`);
+      }
+      lastInputTs = now;
+
       await queuePython(`move_player(${dx}, ${dy})`);
       await renderNow();
     }
@@ -253,12 +310,20 @@ reset_state()
 
     document.addEventListener('keydown', (e) => {
       const key = e.key.toLowerCase();
-      if (['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d'].includes(key)) e.preventDefault();
+      if (key === 'enter' && !pyodide && !booting) {
+        e.preventDefault();
+        boot().catch(() => {});
+        return;
+      }
+      if (['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d'].includes(key)) {
+        e.preventDefault();
+        term.focus();
+      }
       if (key === 'arrowup' || key === 'w') handleDirection('up');
       if (key === 'arrowdown' || key === 's') handleDirection('down');
       if (key === 'arrowleft' || key === 'a') handleDirection('left');
       if (key === 'arrowright' || key === 'd') handleDirection('right');
-    });
+    }, { capture: true });
 
     document.querySelectorAll('[data-dir]').forEach((btn) => {
       const dir = btn.getAttribute('data-dir');
@@ -270,6 +335,7 @@ reset_state()
     });
 
     document.getElementById('boot-btn').addEventListener('click', () => boot().catch(err => {
+      booting = false;
       term.writeln('Boot failed: ' + String(err));
       setStatus('boot failed');
     }));
@@ -284,10 +350,27 @@ reset_state()
       if (!pyodide) return;
       await queuePython('reset_state()');
       await renderNow();
+      lastInputTs = null;
       glitchPulse();
       setStatus('running');
     });
 
+    window.addEventListener('offline', () => {
+      term.writeln('OFFLINE MODE: Niemand kann dich hören. Nur wir beide.');
+      setStatus('offline');
+    });
+
+
+    window.addEventListener('load', () => {
+      if (!autoBootStarted) {
+        autoBootStarted = true;
+        boot().catch(err => {
+          booting = false;
+          term.writeln('Boot failed: ' + String(err));
+          setStatus('boot failed');
+        });
+      }
+    });
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js').catch(() => {});
