@@ -420,6 +420,51 @@
       letter-spacing: 0.08em;
     }
 
+
+
+    .promo-box {
+      margin-top: 18px;
+      background: linear-gradient(135deg, rgba(224,85,85,0.10), rgba(74,184,212,0.08));
+      border: 1px solid var(--dim);
+      border-radius: 8px;
+      padding: 18px;
+    }
+
+    .promo-title {
+      font-family: var(--mono);
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      color: var(--text);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .promo-desc {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 12px;
+      line-height: 1.6;
+    }
+
+    .promo-link {
+      display: inline-block;
+      border: 1px solid var(--red);
+      border-radius: 6px;
+      color: #ffd4d4;
+      text-decoration: none;
+      padding: 8px 12px;
+      font-family: var(--mono);
+      letter-spacing: 0.06em;
+      transition: all .2s ease;
+    }
+
+    .promo-link:hover {
+      color: #0c0d12;
+      background: var(--red);
+      box-shadow: 0 0 14px rgba(224,85,85,0.25);
+    }
+
+
     .carousel {
       margin-top: 20px;
       background: var(--surface);
@@ -725,6 +770,19 @@
   </div>
 </section>
 
+
+<section>
+  <div class="container">
+    <p class="section-label" data-i18n="sec_poc">// live experiment</p>
+    <h2 data-i18n="poc_title">IrsanAI Interactive Mini-Gameplay-PoC</h2>
+    <div class="promo-box">
+      <p class="promo-title" data-i18n="poc_label">Direkt im Browser testen</p>
+      <p class="promo-desc" data-i18n="poc_desc">Neuer Browser-Prototyp mit xterm.js + Pyodide: Mini-Grid, Input-Steuerung und einfacher VOID-Chase-Loop als Live-Demo.</p>
+      <a class="promo-link" href="./pwa_starter.html" data-i18n="poc_cta">→ LIVE testen: pwa_starter.html</a>
+    </div>
+  </div>
+</section>
+
 <section>
   <div class="container">
     <p class="section-label" data-i18n="sec_terminal">// terminal preview</p>
@@ -832,6 +890,11 @@
       sec_terminal: '// terminal preview',
       looks_like: 'So sieht es aus',
       sec_live: '// live preview',
+      sec_poc: '// live experiment',
+      poc_title: 'IrsanAI Interactive Mini-Gameplay-PoC',
+      poc_label: 'Direkt im Browser testen',
+      poc_desc: 'Neuer Browser-Prototyp mit xterm.js + Pyodide: Mini-Grid, Input-Steuerung und einfacher VOID-Chase-Loop als Live-Demo.',
+      poc_cta: '→ LIVE testen: pwa_starter.html',
       live_title: 'Terminal-Ansichten & Demo',
       live_desc: 'Screenshot-Carousel mit Platzhaltern für eure besten Sessions sowie Asciinema-Embed für eine schnelle Live-Demo.',
       asci_1: 'Asciinema Demo 1',
@@ -860,6 +923,11 @@
       sec_terminal: '// terminal preview',
       looks_like: 'What it looks like',
       sec_live: '// live preview',
+      sec_poc: '// live experiment',
+      poc_title: 'IrsanAI Interactive Mini-Gameplay-PoC',
+      poc_label: 'Test directly in browser',
+      poc_desc: 'New browser prototype with xterm.js + Pyodide: mini grid, keyboard input and a simple VOID chase loop as a live demo.',
+      poc_cta: '→ LIVE test: pwa_starter.html',
       live_title: 'Terminal views & demo',
       live_desc: 'Screenshot carousel with placeholders for your best sessions plus Asciinema embeds for quick live demos.',
       asci_1: 'Asciinema Demo 1',
