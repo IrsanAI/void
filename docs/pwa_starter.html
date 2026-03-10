@@ -10,33 +10,32 @@
   <style>
     :root { color-scheme: dark; }
     body { margin:0; background:#05060a; color:#d0d0df; font-family: ui-monospace, monospace; }
-    .wrap { max-width: 1240px; margin: 0 auto; padding: 16px; }
+    .wrap { max-width: 1400px; margin: 0 auto; padding: 16px; }
     h1 { margin: 0 0 8px; font-size: 22px; color:#e05555; letter-spacing: .08em; }
     p { margin: 0 0 12px; color:#8d8da6; }
-    #term-shell { border:1px solid #1f2230; border-radius:10px; padding:10px; background:#0c0d12; min-height:680px; transition: filter .12s ease, box-shadow .12s ease; box-shadow: 0 0 0 rgba(224,85,85,0); }
+    #term-shell { border:1px solid #1f2230; border-radius:10px; padding:10px; background:#0c0d12; min-height:820px; transition: filter .12s ease, box-shadow .12s ease; box-shadow: 0 0 0 rgba(224,85,85,0); }
     #term-shell.glitch { filter: saturate(1.5) contrast(1.18) hue-rotate(-18deg); box-shadow: 0 0 18px rgba(224,85,85,.35); }
     .controls { margin: 10px 0 14px; display:flex; gap:8px; flex-wrap: wrap; }
     .btn { border:1px solid #303449; border-radius:6px; background:#10131c; color:#d0d0df; padding:8px 12px; cursor:pointer; font-size:14px; }
     .btn:hover { border-color:#e05555; color:#ffb4b4; }
     .hint { font-size: 13px; color:#7c81a8; }
-    .touchpad { margin-top: 12px; display:grid; grid-template-columns: repeat(6, minmax(56px, auto)); gap:8px; width:max-content; user-select:none; }
+    .touchpad { margin-top: 12px; display:grid; grid-template-columns: repeat(8, minmax(56px, auto)); gap:8px; width:max-content; user-select:none; }
     .dpad { min-height: 48px; }
-    .dpad.empty { visibility: hidden; }
     .status { margin-top: 8px; font-size: 12px; color: #7e92b0; font-family: ui-monospace, monospace; }
   </style>
 </head>
 <body>
   <div class="wrap">
     <h1>VOID PWA Starter // Evolution PoC</h1>
-    <p>Größeres 15x15-Mini-VOID mit versteckter VOID, Scan/Ping/Listen-Aktionen, Rivalen-Score und psychologischen Layern.</p>
+    <p>Großes 21x21-Spielfeld, versteckte VOID, Scan/Ping/Listen/Rast, psychologische Layer und stylische Terminal-Overlays.</p>
 
     <div class="controls">
       <button class="btn" id="boot-btn">Boot</button>
       <button class="btn" id="toggle-btn">Pause</button>
       <button class="btn" id="reset-btn">Reset</button>
     </div>
-    <div class="hint">Move: ↑ ↓ ← → oder WASD · Aktionen: E=Scan, Q=Ping, F=Listen.</div>
-    <div class="hint">Psychologie: Paranoia (versteckte VOID), Einsamkeit/Bindung (Ping), Rivalität (Leaderboard-Jagd).</div>
+    <div class="hint">Move: ↑ ↓ ← → oder WASD · E=Scan · Q=Ping · F=Listen · R=Rast.</div>
+    <div class="hint">Prinzip wie Termux: VOID bleibt unsichtbar, bis du aktiv Informationen riskierst.</div>
 
     <div id="term-shell"><div id="term"></div></div>
 
@@ -48,6 +47,7 @@
       <button class="btn dpad" data-action="scan">SCAN</button>
       <button class="btn dpad" data-action="ping">PING</button>
       <button class="btn dpad" data-action="listen">LISTEN</button>
+      <button class="btn dpad" data-action="rest">RAST</button>
     </div>
     <div class="status" id="status">Status: idle</div>
   </div>
@@ -58,10 +58,10 @@
     const term = new Terminal({
       convertEol: true,
       cursorBlink: true,
-      rows: 42,
-      cols: 110,
+      rows: 48,
+      cols: 150,
       fontSize: 18,
-      lineHeight: 1.15,
+      lineHeight: 1.12,
       theme: { background: '#0c0d12', foreground: '#d0d0df', cursor: '#e05555' }
     });
     term.open(document.getElementById('term'));
@@ -114,13 +114,13 @@
     async function runBootSequence() {
       setStatus('booting...');
       term.writeln('[ OK ] Initializing Neural Void Network...');
-      await sleep(340);
-      term.writeln('[ OK ] Uplink to fractured signal mesh...');
-      await sleep(340);
-      term.writeln('[ WARN ] Biometric instability detected...');
-      await sleep(380);
-      term.writeln('[ WARN ] VOID prefers the leader...');
-      await sleep(420);
+      await sleep(260);
+      term.writeln('[ OK ] Attaching psychometric channels...');
+      await sleep(260);
+      term.writeln('[ WARN ] Emotional leakage detected...');
+      await sleep(300);
+      term.writeln('[ WARN ] Rival fragments online...');
+      await sleep(320);
       term.writeln('Loading Pyodide...');
     }
 
@@ -138,8 +138,37 @@
 import random
 from collections import deque
 
-GRID = 15
+GRID = 21
 MAX_ENERGY = 100
+
+C_RESET = "\\033[0m"
+C_DIM = "\\033[90m"
+C_RED = "\\033[91m"
+C_GREEN = "\\033[92m"
+C_YELLOW = "\\033[93m"
+C_BLUE = "\\033[94m"
+C_MAGENTA = "\\033[95m"
+C_CYAN = "\\033[96m"
+C_BOLD = "\\033[1m"
+
+VOID_MESSAGES = {
+    "paranoia": [
+        "Ich sehe dich. Schon seit einer Weile.",
+        "Deine letzte Bewegung war vorhersehbar.",
+        "Du glaubst du weißt wo ich bin. Ich weiß es besser.",
+    ],
+    "loneliness": [
+        "Du bist allein hier. Das weißt du.",
+        "Die anderen Fragmente helfen dir nicht.",
+        "Isolation schützt dich. Oder zerstört dich.",
+    ],
+    "rivalry": [
+        "Der Führende zieht die VOID an.",
+        "Score ist nur ein anderes Wort für Risiko.",
+        "Echo-Agent ist schneller als du.",
+    ],
+    "whisper": ["...", "psst.", "tick. tack.", "ich bin hier."]
+}
 
 tick_count = 0
 player_x, player_y = GRID // 2, GRID // 2
@@ -159,8 +188,13 @@ stress = 0
 game_over = False
 reveal_turns = 0
 void_lock_turns = 0
-log_lines = deque(maxlen=4)
+last_void_msg = ""
+log_lines = deque(maxlen=5)
 input_deltas = deque(maxlen=8)
+
+
+def color(txt, c):
+    return c + txt + C_RESET
 
 
 def _spawn_signal(exclude=None):
@@ -171,7 +205,7 @@ def _spawn_signal(exclude=None):
         return (sx, sy)
 
 
-def _seed_signals(count=6):
+def _seed_signals(count=9):
     global signals
     used = {(player_x, player_y), (void_x, void_y), (rival_x, rival_y)}
     signals = []
@@ -200,10 +234,10 @@ def _collect_if_present(x, y, who):
         signals.append(_spawn_signal(refill_ex))
         if who == 'player':
             score += 1
-            log_lines.append('Signal stabilisiert (+1 Score).')
+            log_lines.append('⚡ Signal absorbiert (+1 Score).')
         else:
             rival_score += 1
-            log_lines.append('Echo-Agent punktet. Leaderboard verschiebt sich.')
+            log_lines.append('◆ Echo-Agent punktet. Leaderboard verschiebt sich.')
 
 
 def _move_toward(v, t):
@@ -232,7 +266,7 @@ def _add_energy(amount):
 def _consume_energy(cost):
     global energy
     if energy < cost:
-        log_lines.append('Nicht genug Energie: ' + str(cost) + ' benötigt.')
+        log_lines.append('⚠ Nicht genug Energie: ' + str(cost) + ' benötigt.')
         _drift_paranoia(4)
         return False
     energy -= cost
@@ -254,7 +288,7 @@ def move_player(dx, dy):
     global player_x, player_y
     if game_over:
         return
-    if not _consume_energy(1):
+    if not _consume_energy(2):
         return
     player_x = max(0, min(GRID-1, player_x + dx))
     player_y = max(0, min(GRID-1, player_y + dy))
@@ -265,26 +299,26 @@ def action_scan():
     global reveal_turns, void_lock_turns
     if game_over:
         return
-    if not _consume_energy(12):
+    if not _consume_energy(14):
         return
-    reveal_turns = 3
+    reveal_turns = 4
     void_lock_turns = max(void_lock_turns, 4)
-    _drift_paranoia(8)
-    log_lines.append('SCAN aktiv: VOID sichtbar (3 Ticks), aber dein Standort wurde exponiert.')
+    _drift_paranoia(10)
+    log_lines.append('⚠ SCAN: VOID sichtbar (4 Ticks), aber dein Standort wurde exponiert.')
 
 
 def action_ping():
     global void_lock_turns
     if game_over:
         return
-    if not _consume_energy(8):
+    if not _consume_energy(10):
         return
     nearest = _nearest_signal(player_x, player_y)
     if nearest:
         d = _distance(player_x, player_y, nearest[0], nearest[1])
-        log_lines.append('PING: nächstes Signal in Distanz ' + str(d) + '.')
+        log_lines.append('📡 PING: nächstes Signal in Distanz ' + str(d) + '.')
     else:
-        log_lines.append('PING: keine Signale verfügbar.')
+        log_lines.append('📡 PING: keine Signale verfügbar.')
     _drift_bond(10)
     _drift_paranoia(3)
     void_lock_turns = max(void_lock_turns, 3)
@@ -293,16 +327,25 @@ def action_ping():
 def action_listen():
     if game_over:
         return
-    if not _consume_energy(5):
+    if not _consume_energy(6):
         return
     d = _distance(player_x, player_y, void_x, void_y)
     if d <= 3:
-        log_lines.append('LISTEN: kaltes Flüstern direkt neben dir...')
+        log_lines.append('🎧 LISTEN: kaltes Flüstern direkt neben dir...')
     elif d <= 6:
-        log_lines.append('LISTEN: statische Echos in mittlerer Nähe.')
+        log_lines.append('🎧 LISTEN: statische Echos in mittlerer Nähe.')
     else:
-        log_lines.append('LISTEN: nur fernes Rauschen.')
+        log_lines.append('🎧 LISTEN: nur fernes Rauschen.')
     _drift_paranoia(-6)
+
+
+def action_rest():
+    if game_over:
+        return
+    gain = random.randint(8, 16)
+    _add_energy(gain)
+    _drift_paranoia(2)
+    log_lines.append('🛌 RAST: +' + str(gain) + ' Energie. Du bleibst verwundbar.')
 
 
 def _rival_tick():
@@ -327,9 +370,9 @@ def _void_target():
     if void_lock_turns > 0:
         return (player_x, player_y)
 
-    if player_leads and random.random() < 0.72:
+    if player_leads and random.random() < 0.74:
         return (player_x, player_y)
-    if rival_leads and random.random() < 0.72:
+    if rival_leads and random.random() < 0.74:
         return (rival_x, rival_y)
 
     if player_dist <= rival_dist:
@@ -337,8 +380,20 @@ def _void_target():
     return (rival_x, rival_y)
 
 
+def _void_whisper():
+    ctx = 'paranoia'
+    if rivalry_pressure > 60:
+        ctx = 'rivalry'
+    elif bond < 30:
+        ctx = 'loneliness'
+    if random.random() < 0.35:
+        return random.choice(VOID_MESSAGES['whisper'])
+    return random.choice(VOID_MESSAGES[ctx])
+
+
 def tick_world():
-    global tick_count, void_x, void_y, reveal_turns, void_lock_turns, game_over, rivalry_pressure, paranoia
+    global tick_count, void_x, void_y, reveal_turns, void_lock_turns
+    global game_over, rivalry_pressure, paranoia, rival_x, rival_y, last_void_msg
     if game_over:
         return
 
@@ -358,11 +413,10 @@ def tick_world():
 
     if d_player == 0:
         game_over = True
-        log_lines.append('☠ VOID hat dich erreicht.')
+        log_lines.append('☠ DIE VOID HAT DICH ERWISCHT.')
 
     if d_rival == 0:
-        log_lines.append('VOID hat Echo-Agent ausgelöscht. Jagd auf dich intensiviert.')
-        global rival_x, rival_y
+        log_lines.append('💀 VOID hat Echo-Agent verschluckt. Jagd auf dich intensiviert.')
         rival_x, rival_y = GRID - 2, GRID - 2
 
     rivalry_pressure = max(0, min(100, 50 + (score - rival_score) * 9))
@@ -371,60 +425,65 @@ def tick_world():
     _add_energy(2)
     _drift_bond(-1)
 
+    if tick_count % 3 == 0:
+        last_void_msg = _void_whisper()
+
     if reveal_turns > 0:
         reveal_turns -= 1
     if void_lock_turns > 0:
         void_lock_turns -= 1
 
 
+def _bar(value, length=12, color_ok=C_GREEN, color_mid=C_YELLOW, color_bad=C_RED):
+    v = max(0, min(100, int(value)))
+    fill = int((v / 100) * length)
+    empty = length - fill
+    col = color_ok if v > 65 else (color_mid if v > 35 else color_bad)
+    return col + ('█' * fill) + C_DIM + ('░' * empty) + C_RESET
+
+
 def _render_cell(x, y):
-    # Größere Optik: doppelte Breite
     if x == player_x and y == player_y:
-        return '◉ '
+        return color('◉ ', C_GREEN)
     if x == rival_x and y == rival_y:
-        return '◆ '
+        return color('◆ ', C_CYAN)
     if reveal_turns > 0 and x == void_x and y == void_y:
-        return '▓ '
+        return color('▓ ', C_RED)
     if (x, y) in signals:
-        return '◈ '
-    return '· '
-
-
-def _emotion_line():
-    p = 'Paranoia: ' + str(paranoia) + '%'
-    b = 'Bindung: ' + str(bond) + '%'
-    r = 'Rivalität: ' + str(rivalry_pressure) + '%'
-    return p + '   |   ' + b + '   |   ' + r
+        return color('◈ ', C_YELLOW)
+    return color('· ', C_DIM)
 
 
 def frame():
     rows = []
-    rows.append('VOID MINI LOOP // tick=' + str(tick_count))
-    rows.append('Score YOU/ECHO: ' + str(score) + ' / ' + str(rival_score) + '    Energy: ' + str(energy) + '/' + str(MAX_ENERGY))
-    rows.append(_emotion_line())
-    rows.append('Kontrollen: Move(WASD/Arrows) | E=Scan | Q=Ping | F=Listen')
-    rows.append('Legend: ◉ du  ◆ echo-agent  ◈ signal  ▓ VOID(nur mit Scan sichtbar)')
+    rows.append(color('VOID MINI LOOP // tick=' + str(tick_count), C_BOLD + C_RED))
+    rows.append(color('Score YOU/ECHO: ', C_CYAN) + str(score) + ' / ' + str(rival_score) + '    ' + color('Energy:', C_CYAN) + ' ' + str(energy) + '/' + str(MAX_ENERGY))
+    rows.append(color('Paranoia ', C_RED) + _bar(paranoia, 10, C_BLUE, C_MAGENTA, C_RED) + '   ' + color('Bindung ', C_BLUE) + _bar(bond, 10, C_CYAN, C_BLUE, C_MAGENTA) + '   ' + color('Rivalität ', C_YELLOW) + _bar(rivalry_pressure, 10, C_GREEN, C_YELLOW, C_RED))
+    rows.append(color('Kontrollen: ', C_DIM) + color('WASD/Arrows', C_BOLD) + ' Move  ' + color('E', C_BOLD) + ' Scan  ' + color('Q', C_BOLD) + ' Ping  ' + color('F', C_BOLD) + ' Listen  ' + color('R', C_BOLD) + ' Rast')
+    rows.append(color('Legend: ◉ du  ◆ echo-agent  ◈ signal  ▓ VOID(nur mit Scan sichtbar)', C_DIM))
+    if last_void_msg:
+        rows.append(color('VOID: ' + last_void_msg, C_RED))
     rows.append('')
 
-    border = '+' + '--' * GRID + '+'
+    border = color('┌' + '─' * (GRID * 2) + '┐', C_DIM)
     rows.append(border)
     for y in range(GRID):
         line = ''.join(_render_cell(x, y) for x in range(GRID))
-        rows.append('|' + line + '|')
-    rows.append(border)
+        rows.append(color('│', C_DIM) + line + color('│', C_DIM))
+    rows.append(color('└' + '─' * (GRID * 2) + '┘', C_DIM))
 
     d = _distance(player_x, player_y, void_x, void_y)
     rows.append('')
     rows.append('Entfernung zur VOID (geschätzt): ' + str(d) + ('  [SCAN aktiv]' if reveal_turns > 0 else '  [unsichtbar]'))
     if void_lock_turns > 0:
-        rows.append('⚠ Deine letzten Aktionen haben dich verraten: VOID-Lock ' + str(void_lock_turns) + ' Tick(s).')
+        rows.append(color('⚠ Deine letzten Aktionen haben dich verraten: VOID-Lock ' + str(void_lock_turns) + ' Tick(s).', C_YELLOW))
     if d <= 2:
-        rows.append('⚠ PARANOIA-SPIKE: kalte Nähe erkannt.')
+        rows.append(color('⚠ PARANOIA-SPIKE: kalte Nähe erkannt.', C_RED))
     if game_over:
-        rows.append('☠ GAME OVER — Reset drücken.')
+        rows.append(color('☠ GAME OVER — Reset drücken.', C_RED))
 
     rows.append('')
-    rows.append('Overlay:')
+    rows.append(color('Overlay:', C_DIM))
     if log_lines:
         for ln in list(log_lines):
             rows.append('  - ' + ln)
@@ -442,7 +501,7 @@ def step():
 def reset_state():
     global tick_count, player_x, player_y, void_x, void_y, rival_x, rival_y
     global score, rival_score, energy, paranoia, bond, rivalry_pressure
-    global stress, game_over, reveal_turns, void_lock_turns, log_lines, input_deltas
+    global stress, game_over, reveal_turns, void_lock_turns, log_lines, input_deltas, last_void_msg
 
     tick_count = 0
     player_x, player_y = GRID // 2, GRID // 2
@@ -460,10 +519,11 @@ def reset_state():
     game_over = False
     reveal_turns = 0
     void_lock_turns = 0
-    log_lines = deque(maxlen=4)
+    last_void_msg = ""
+    log_lines = deque(maxlen=5)
     input_deltas = deque(maxlen=8)
 
-    _seed_signals(6)
+    _seed_signals(9)
     log_lines.append('Sitzung initialisiert. VOID bleibt unsichtbar bis SCAN.')
 
 
@@ -492,7 +552,7 @@ reset_state()
           glitchPulse();
           dangerHaptic();
         }
-      }, 550);
+      }, 560);
     }
 
     async function move(dx, dy) {
@@ -512,6 +572,7 @@ reset_state()
       if (name === 'scan') await queuePython('action_scan()');
       if (name === 'ping') await queuePython('action_ping()');
       if (name === 'listen') await queuePython('action_listen()');
+      if (name === 'rest') await queuePython('action_rest()');
       await renderNow();
       glitchPulse();
     }
@@ -531,7 +592,7 @@ reset_state()
         return;
       }
 
-      if (['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d','q','e','f'].includes(key)) {
+      if (['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d','q','e','f','r'].includes(key)) {
         e.preventDefault();
         term.focus();
       }
@@ -543,6 +604,7 @@ reset_state()
       if (key === 'e') action('scan');
       if (key === 'q') action('ping');
       if (key === 'f') action('listen');
+      if (key === 'r') action('rest');
     }, { capture: true });
 
     document.querySelectorAll('[data-dir]').forEach((btn) => {
