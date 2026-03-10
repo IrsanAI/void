@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>VOID PWA Starter (PoC)</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css" />
+  <style>
+    body { margin:0; background:#060608; color:#d0d0df; font-family: ui-monospace, monospace; }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 16px; }
+    h1 { margin: 0 0 8px; font-size: 20px; color:#e05555; letter-spacing: .08em; }
+    p { margin: 0 0 12px; color:#8d8da6; }
+    #term-shell { border:1px solid #1f2230; border-radius:8px; padding:8px; background:#0c0d12; min-height:380px; transition: filter .12s ease; }
+    #term-shell.glitch { filter: saturate(1.4) contrast(1.15) hue-rotate(-18deg); }
+    .controls { margin: 10px 0 14px; display:flex; gap:8px; flex-wrap: wrap; }
+    .btn { border:1px solid #303449; border-radius:6px; background:#10131c; color:#d0d0df; padding:6px 10px; cursor:pointer; }
+    .btn:hover { border-color:#e05555; color:#ffb4b4; }
+    .hint { font-size: 12px; color:#6f7394; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>VOID PWA Starter // PoC</h1>
+    <p>xterm.js + Pyodide: interaktives 9x9-Mini-VOID mit Signalen, Paranoia und Glitch-Effekt (WASD/Pfeiltasten).</p>
+
+    <div class="controls">
+      <button class="btn" id="boot-btn">Boot</button>
+      <button class="btn" id="toggle-btn">Pause</button>
+      <button class="btn" id="reset-btn">Reset</button>
+    </div>
+    <div class="hint">Input: ↑ ↓ ← → oder WASD · Ziel: Signale sammeln (◈), VOID (▓) meiden.</div>
+
+    <div id="term-shell"><div id="term"></div></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.js"></script>
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.27.2/full/pyodide.js"></script>
+  <script>
+    const term = new Terminal({
+      convertEol: true,
+      cursorBlink: true,
+      rows: 24,
+      cols: 80,
+      theme: { background: '#0c0d12', foreground: '#d0d0df', cursor: '#e05555' }
+    });
+    term.open(document.getElementById('term'));
+
+    let pyodide = null;
+    let running = false;
+    let loopId = null;
+
+    const shell = document.getElementById('term-shell');
+
+    function glitchPulse() {
+      shell.classList.add('glitch');
+      setTimeout(() => shell.classList.remove('glitch'), 80);
+    }
+
+    async function boot() {
+      if (pyodide) return;
+      term.writeln('Booting VOID PWA prototype...');
+      term.writeln('Loading Pyodide...');
+      pyodide = await loadPyodide();
+      term.writeln('Pyodide online. Preparing simulation...');
+
+      pyodide.setStdout({ batched: (s) => term.writeln(s) });
+
+      await pyodide.runPythonAsync(`
+import random
+tick_count = 0
+GRID = 9
+player_x, player_y = 4, 4
+void_x, void_y = 1, 1
+signals = []
+score = 0
+paranoia = 0
+game_over = False
+
+def _spawn_signal(exclude=None):
+    while True:
+        sx, sy = random.randint(0, GRID-1), random.randint(0, GRID-1)
+        if exclude and (sx, sy) in exclude:
+            continue
+        return (sx, sy)
+
+def reset_state():
+    global player_x, player_y, void_x, void_y, tick_count, signals, score, paranoia, game_over
+    player_x, player_y = 4, 4
+    void_x, void_y = 1, 1
+    tick_count = 0
+    score = 0
+    paranoia = 0
+    game_over = False
+    signals = []
+    used = {(player_x, player_y), (void_x, void_y)}
+    for _ in range(3):
+        sig = _spawn_signal(used)
+        used.add(sig)
+        signals.append(sig)
+
+def _distance():
+    return abs(void_x-player_x) + abs(void_y-player_y)
+
+def _collect_signals():
+    global score, signals
+    p = (player_x, player_y)
+    if p in signals:
+        score += 1
+        signals = [s for s in signals if s != p]
+        signals.append(_spawn_signal(set(signals) | {p, (void_x, void_y)}))
+
+def move_player(dx, dy):
+    global player_x, player_y
+    if game_over:
+        return
+    player_x = max(0, min(GRID-1, player_x + dx))
+    player_y = max(0, min(GRID-1, player_y + dy))
+    _collect_signals()
+
+def _move_toward(v, t):
+    if v < t: return v + 1
+    if v > t: return v - 1
+    return v
+
+def tick_void():
+    global void_x, void_y, tick_count, paranoia, game_over
+    if game_over:
+        return
+    tick_count += 1
+    if tick_count % 2 == 0:
+        void_x = _move_toward(void_x, player_x)
+        void_y = _move_toward(void_y, player_y)
+
+    dist = _distance()
+    paranoia = max(0, min(100, 100 - dist * 12))
+    if dist == 0:
+        game_over = True
+
+def frame():
+    rows = []
+    rows.append('VOID MINI LOOP // tick=' + str(tick_count))
+    rows.append('Score: ' + str(score) + '   Paranoia: ' + str(paranoia) + '%')
+    rows.append('')
+    for y in range(GRID):
+        line = []
+        for x in range(GRID):
+            if x == player_x and y == player_y:
+                line.append('◉')
+            elif x == void_x and y == void_y:
+                line.append('▓')
+            elif (x, y) in signals:
+                line.append('◈')
+            else:
+                line.append('·')
+        rows.append(''.join(line))
+    rows.append('')
+    dist = _distance()
+    rows.append('Distance to VOID: ' + str(dist))
+    if dist <= 2:
+        rows.append('⚠ PARANOIA SPIKE ⚠')
+    if game_over:
+        rows.append('☠ VOID captured you — press Reset')
+    return '\\n'.join(rows)
+
+def step():
+    tick_void()
+    return frame()
+
+reset_state()
+`);
+
+      running = true;
+      startLoop();
+    }
+
+    function startLoop() {
+      if (loopId) clearInterval(loopId);
+      loopId = setInterval(async () => {
+        if (!running || !pyodide) return;
+        const out = await pyodide.runPythonAsync('step()');
+        term.write('\x1b[2J\x1b[H');
+        term.write(out.replace(/\n/g, '\r\n'));
+        const danger = await pyodide.runPythonAsync('abs(void_x-player_x) + abs(void_y-player_y) <= 2');
+        if (danger) glitchPulse();
+      }, 550);
+    }
+
+    async function move(dx, dy) {
+      if (!pyodide) return;
+      await pyodide.runPythonAsync(`move_player(${dx}, ${dy})`);
+    }
+
+    document.addEventListener('keydown', (e) => {
+      const key = e.key.toLowerCase();
+      if (['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d'].includes(key)) e.preventDefault();
+      if (key === 'arrowup' || key === 'w') move(0, -1);
+      if (key === 'arrowdown' || key === 's') move(0, 1);
+      if (key === 'arrowleft' || key === 'a') move(-1, 0);
+      if (key === 'arrowright' || key === 'd') move(1, 0);
+    });
+
+    document.getElementById('boot-btn').addEventListener('click', () => boot().catch(err => term.writeln('Boot failed: ' + String(err))));
+    document.getElementById('toggle-btn').addEventListener('click', () => {
+      running = !running;
+      document.getElementById('toggle-btn').textContent = running ? 'Pause' : 'Resume';
+    });
+    document.getElementById('reset-btn').addEventListener('click', async () => {
+      if (!pyodide) return;
+      await pyodide.runPythonAsync('reset_state()');
+      glitchPulse();
+    });
+  </script>
+</body>
+</html>
