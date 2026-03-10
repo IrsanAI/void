@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#0c0d12" />
+  <link rel="manifest" href="./manifest.webmanifest" />
   <title>VOID PWA Starter (PoC)</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css" />
   <style>
@@ -209,6 +211,14 @@ reset_state()
       await pyodide.runPythonAsync('reset_state()');
       glitchPulse();
     });
-  </script>
+  
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    });
+  }
+
+</script>
 </body>
 </html>

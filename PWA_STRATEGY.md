@@ -45,3 +45,5 @@ Wenn dieses Fundament stabil läuft, kann die nächste Stufe folgen:
 - `docs/pwa_starter.html` enthält jetzt ein interaktives Mini-Grid (xterm.js + Pyodide),
   Keyboard-Input (WASD/Pfeile), einen einfachen VOID-Chase-Loop und Glitch-Pulse bei Gefahr.
 - Damit ist der "Heartbeat"-Schritt überschritten; nächster Schritt ist die Portierung echter Game-State-Strukturen aus `void_solo_enhanced.py`.
+
+- Zusätzlich wurden `docs/manifest.webmanifest` und `docs/sw.js` ergänzt (PWA-Grundlagen: installierbar + Cache-Basis).
