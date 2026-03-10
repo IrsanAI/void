@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#0c0d12" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <title>VOID PWA Starter (PoC)</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css" />
+  <style>
+    body { margin:0; background:#060608; color:#d0d0df; font-family: ui-monospace, monospace; }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 16px; }
+    h1 { margin: 0 0 8px; font-size: 20px; color:#e05555; letter-spacing: .08em; }
+    p { margin: 0 0 12px; color:#8d8da6; }
+    #term-shell { border:1px solid #1f2230; border-radius:8px; padding:8px; background:#0c0d12; min-height:380px; transition: filter .12s ease; }
+    #term-shell.glitch { filter: saturate(1.4) contrast(1.15) hue-rotate(-18deg); }
+    .controls { margin: 10px 0 14px; display:flex; gap:8px; flex-wrap: wrap; }
+    .btn { border:1px solid #303449; border-radius:6px; background:#10131c; color:#d0d0df; padding:6px 10px; cursor:pointer; }
+    .btn:hover { border-color:#e05555; color:#ffb4b4; }
+    .hint { font-size: 12px; color:#6f7394; }
+    .touchpad { margin-top: 12px; display:grid; grid-template-columns: 52px 52px 52px; gap:8px; width:max-content; user-select:none; }
+    .dpad { height: 52px; width: 52px; }
+    .dpad.empty { visibility: hidden; }
+    .status { margin-top: 8px; font-size: 12px; color: #7e92b0; font-family: ui-monospace, monospace; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>VOID PWA Starter // PoC</h1>
+    <p>xterm.js + Pyodide: interaktives 9x9-Mini-VOID mit Signalen, Paranoia, Stress-Tracking und Glitch-Effekt.</p>
+
+    <div class="controls">
+      <button class="btn" id="boot-btn">Boot</button>
+      <button class="btn" id="toggle-btn">Pause</button>
+      <button class="btn" id="reset-btn">Reset</button>
+    </div>
+    <div class="hint">Input: ↑ ↓ ← → oder WASD · Ziel: Signale sammeln (◈), VOID (▓) meiden.</div>
+    <div class="hint">Mobile: benutze das Touch-D-Pad unter dem Terminal.</div>
+
+    <div id="term-shell"><div id="term"></div></div>
+
+    <div class="touchpad" aria-label="Touch controls">
+      <button class="btn dpad empty" disabled>·</button>
+      <button class="btn dpad" data-dir="up">↑</button>
+      <button class="btn dpad empty" disabled>·</button>
+      <button class="btn dpad" data-dir="left">←</button>
+      <button class="btn dpad" data-dir="down">↓</button>
+      <button class="btn dpad" data-dir="right">→</button>
+    </div>
+    <div class="status" id="status">Status: idle</div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.js"></script>
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.27.2/full/pyodide.js"></script>
+  <script>
+    const term = new Terminal({
+      convertEol: true,
+      cursorBlink: true,
+      rows: 24,
+      cols: 80,
+      theme: { background: '#0c0d12', foreground: '#d0d0df', cursor: '#e05555' }
+    });
+    term.open(document.getElementById('term'));
+    term.focus();
+
+    let pyodide = null;
+    let running = false;
+    let loopId = null;
+    let pyQueue = Promise.resolve();
+    let lastInputTs = null;
+    let booting = false;
+    let autoBootStarted = false;
+
+    const shell = document.getElementById('term-shell');
+    const statusEl = document.getElementById('status');
+
+    shell.addEventListener('pointerdown', () => term.focus());
+
+    function setStatus(msg) {
+      if (statusEl) statusEl.textContent = `Status: ${msg}`;
+    }
+
+    function sleep(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    function glitchPulse() {
+      shell.classList.add('glitch');
+      setTimeout(() => shell.classList.remove('glitch'), 100);
+    }
+
+    function dangerHaptic() {
+      if (navigator.vibrate) navigator.vibrate([45, 25, 45]);
+    }
+
+    function queuePython(code) {
+      if (!pyodide) return Promise.resolve(null);
+      pyQueue = pyQueue
+        .then(() => pyodide.runPythonAsync(code))
+        .catch((err) => {
+          term.writeln('Python queue error: ' + String(err));
+          return null;
+        });
+      return pyQueue;
+    }
+
+    async function renderNow() {
+      const out = await queuePython('frame()');
+      if (!out) return;
+      term.write('\x1b[2J\x1b[H');
+      term.write(String(out).replace(/\n/g, '\r\n'));
+    }
+
+    async function runBootSequence() {
+      setStatus('booting...');
+      term.writeln('[ OK ] Initializing Neural Void Network...');
+      await sleep(450);
+      term.writeln('[ OK ] Attaching terminal cortex...');
+      await sleep(450);
+      term.writeln('[ WARN ] Unauthorized consciousness detected...');
+      await sleep(550);
+      term.writeln('Loading Pyodide...');
+    }
+
+    async function boot() {
+      if (pyodide || booting) return;
+      booting = true;
+      term.writeln('Booting VOID PWA prototype...');
+      await runBootSequence();
+      pyodide = await loadPyodide();
+      term.writeln('Pyodide online. Preparing simulation...');
+
+      pyodide.setStdout({ batched: (s) => term.writeln(s) });
+
+      await pyodide.runPythonAsync(`
+import random
+from collections import deque
+
+tick_count = 0
+GRID = 9
+player_x, player_y = 4, 4
+void_x, void_y = 1, 1
+signals = []
+score = 0
+paranoia = 0
+stress = 0
+game_over = False
+fake_signal = None
+input_deltas = deque(maxlen=6)
+
+def _spawn_signal(exclude=None):
+    while True:
+        sx, sy = random.randint(0, GRID-1), random.randint(0, GRID-1)
+        if exclude and (sx, sy) in exclude:
+            continue
+        return (sx, sy)
+
+def reset_state():
+    global player_x, player_y, void_x, void_y, tick_count, signals, score, paranoia, game_over, stress, fake_signal, input_deltas
+    player_x, player_y = 4, 4
+    void_x, void_y = 1, 1
+    tick_count = 0
+    score = 0
+    paranoia = 0
+    stress = 0
+    game_over = False
+    fake_signal = None
+    input_deltas = deque(maxlen=6)
+    signals = []
+    used = {(player_x, player_y), (void_x, void_y)}
+    for _ in range(3):
+        sig = _spawn_signal(used)
+        used.add(sig)
+        signals.append(sig)
+
+def _distance():
+    return abs(void_x-player_x) + abs(void_y-player_y)
+
+def note_input_delta(delta_ms):
+    global stress
+    if delta_ms <= 0:
+        return
+    input_deltas.append(delta_ms)
+    if len(input_deltas) >= 3:
+        avg = sum(input_deltas) / len(input_deltas)
+        spread = max(input_deltas) - min(input_deltas)
+        stress = max(0, min(100, int((spread / max(1, avg)) * 100)))
+
+def _collect_signals():
+    global score, signals
+    p = (player_x, player_y)
+    if p in signals:
+        score += 1
+        signals = [s for s in signals if s != p]
+        signals.append(_spawn_signal(set(signals) | {p, (void_x, void_y)}))
+
+def move_player(dx, dy):
+    global player_x, player_y
+    if game_over:
+        return
+    player_x = max(0, min(GRID-1, player_x + dx))
+    player_y = max(0, min(GRID-1, player_y + dy))
+    _collect_signals()
+
+def _move_toward(v, t):
+    if v < t: return v + 1
+    if v > t: return v - 1
+    return v
+
+def tick_void():
+    global void_x, void_y, tick_count, paranoia, game_over, fake_signal
+    if game_over:
+        return
+    tick_count += 1
+    if tick_count % 2 == 0:
+        void_x = _move_toward(void_x, player_x)
+        void_y = _move_toward(void_y, player_y)
+
+    dist = _distance()
+    paranoia = max(0, min(100, 100 - dist * 12))
+    if dist == 0:
+        game_over = True
+
+    if paranoia > 85 and tick_count % 5 == 0:
+        fake_signal = _spawn_signal({(player_x, player_y), (void_x, void_y)})
+    elif paranoia < 70:
+        fake_signal = None
+
+def frame():
+    rows = []
+    rows.append('VOID MINI LOOP // tick=' + str(tick_count))
+    rows.append('Score: ' + str(score) + '   Paranoia: ' + str(paranoia) + '%' + '   Stress: ' + str(stress) + '%')
+    rows.append('')
+    for y in range(GRID):
+        line = []
+        for x in range(GRID):
+            if x == player_x and y == player_y:
+                line.append('◉')
+            elif x == void_x and y == void_y:
+                line.append('▓')
+            elif (x, y) in signals:
+                line.append('◈')
+            elif fake_signal and (x, y) == fake_signal:
+                line.append('?')
+            else:
+                line.append('·')
+        rows.append(''.join(line))
+    rows.append('')
+    dist = _distance()
+    rows.append('Distance to VOID: ' + str(dist))
+    if dist <= 2:
+        rows.append('⚠ PARANOIA SPIKE ⚠')
+    if fake_signal:
+        rows.append('⚠ Distortion detected: ghost signal appears')
+    if game_over:
+        rows.append('☠ VOID captured you — press Reset')
+    return '\\n'.join(rows)
+
+def step():
+    tick_void()
+    return frame()
+
+reset_state()
+`);
+
+      running = true;
+      startLoop();
+      await renderNow();
+      setStatus('running');
+      term.focus();
+      booting = false;
+    }
+
+    function startLoop() {
+      if (loopId) clearInterval(loopId);
+      loopId = setInterval(async () => {
+        if (!running || !pyodide) return;
+        const out = await queuePython('step()');
+        if (!out) return;
+        term.write('\x1b[2J\x1b[H');
+        term.write(String(out).replace(/\n/g, '\r\n'));
+        const danger = await queuePython('abs(void_x-player_x) + abs(void_y-player_y) <= 2');
+        if (danger) {
+          glitchPulse();
+          dangerHaptic();
+        }
+      }, 550);
+    }
+
+    async function move(dx, dy) {
+      if (!pyodide || !running) return;
+
+      const now = Date.now();
+      if (lastInputTs !== null) {
+        const delta = now - lastInputTs;
+        await queuePython(`note_input_delta(${delta})`);
+      }
+      lastInputTs = now;
+
+      await queuePython(`move_player(${dx}, ${dy})`);
+      await renderNow();
+    }
+
+    function handleDirection(dir) {
+      if (dir === 'up') move(0, -1);
+      if (dir === 'down') move(0, 1);
+      if (dir === 'left') move(-1, 0);
+      if (dir === 'right') move(1, 0);
+    }
+
+    document.addEventListener('keydown', (e) => {
+      const key = e.key.toLowerCase();
+      if (key === 'enter' && !pyodide && !booting) {
+        e.preventDefault();
+        boot().catch(() => {});
+        return;
+      }
+      if (['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d'].includes(key)) {
+        e.preventDefault();
+        term.focus();
+      }
+      if (key === 'arrowup' || key === 'w') handleDirection('up');
+      if (key === 'arrowdown' || key === 's') handleDirection('down');
+      if (key === 'arrowleft' || key === 'a') handleDirection('left');
+      if (key === 'arrowright' || key === 'd') handleDirection('right');
+    }, { capture: true });
+
+    document.querySelectorAll('[data-dir]').forEach((btn) => {
+      const dir = btn.getAttribute('data-dir');
+      btn.addEventListener('click', () => handleDirection(dir));
+      btn.addEventListener('touchstart', (ev) => {
+        ev.preventDefault();
+        handleDirection(dir);
+      }, { passive: false });
+    });
+
+    document.getElementById('boot-btn').addEventListener('click', () => boot().catch(err => {
+      booting = false;
+      term.writeln('Boot failed: ' + String(err));
+      setStatus('boot failed');
+    }));
+
+    document.getElementById('toggle-btn').addEventListener('click', () => {
+      running = !running;
+      document.getElementById('toggle-btn').textContent = running ? 'Pause' : 'Resume';
+      setStatus(running ? 'running' : 'paused');
+    });
+
+    document.getElementById('reset-btn').addEventListener('click', async () => {
+      if (!pyodide) return;
+      await queuePython('reset_state()');
+      await renderNow();
+      lastInputTs = null;
+      glitchPulse();
+      setStatus('running');
+    });
+
+    window.addEventListener('offline', () => {
+      term.writeln('OFFLINE MODE: Niemand kann dich hören. Nur wir beide.');
+      setStatus('offline');
+    });
+
+
+    window.addEventListener('load', () => {
+      if (!autoBootStarted) {
+        autoBootStarted = true;
+        boot().catch(err => {
+          booting = false;
+          term.writeln('Boot failed: ' + String(err));
+          setStatus('boot failed');
+        });
+      }
+    });
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>
