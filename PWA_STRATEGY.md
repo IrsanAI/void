@@ -38,3 +38,10 @@ Wenn dieses Fundament stabil läuft, kann die nächste Stufe folgen:
 - Input-Handling,
 - KI-Tick,
 - Netzwerk-Adapter.
+
+
+## Aktueller PoC-Status
+
+- `docs/pwa_starter.html` enthält jetzt ein interaktives Mini-Grid (xterm.js + Pyodide),
+  Keyboard-Input (WASD/Pfeile), einen einfachen VOID-Chase-Loop und Glitch-Pulse bei Gefahr.
+- Damit ist der "Heartbeat"-Schritt überschritten; nächster Schritt ist die Portierung echter Game-State-Strukturen aus `void_solo_enhanced.py`.
