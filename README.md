@@ -115,6 +115,9 @@ python3 ~/games/void/game/void_launcher.py
 
 # — oder nach Neustart —
 void
+
+# Schnell-Diagnose
+void doctor
 ```
 
 ### Manuell (Solo Enhanced)
@@ -222,6 +225,12 @@ Installations-Selftest (läuft automatisch in Installern, manuell möglich):
 
 ```bash
 python3 ~/games/void/install/installer_selftest.py
+```
+
+Doctor-Diagnose (manuell):
+
+```bash
+python3 ~/games/void/game/void_doctor.py
 ```
 
 

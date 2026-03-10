@@ -119,7 +119,12 @@ PREFIX_BIN="${PREFIX:-/data/data/com.termux/files/usr}/bin"
 mkdir -p "$PREFIX_BIN"
 cat > "$PREFIX_BIN/void" << VOID_CMD
 #!/data/data/com.termux/files/usr/bin/bash
-python3 "$INSTALL_DIR/game/void_launcher.py" "\$@"
+if [ "\$1" = "doctor" ]; then
+  shift
+  python3 "$INSTALL_DIR/game/void_doctor.py" "\$@"
+else
+  python3 "$INSTALL_DIR/game/void_launcher.py" "\$@"
+fi
 VOID_CMD
 chmod +x "$PREFIX_BIN/void"
 g "        Befehl 'void' in PATH installiert ✓"

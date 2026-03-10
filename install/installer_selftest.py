@@ -18,6 +18,7 @@ REQUIRED = [
     ROOT / "game" / "void_client.py",
     ROOT / "game" / "void_relay.py",
     ROOT / "game" / "void_netcheck.py",
+    ROOT / "game" / "void_doctor.py",
     ROOT / "game" / "void_smoke_test.py",
 ]
 

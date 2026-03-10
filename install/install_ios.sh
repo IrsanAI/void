@@ -100,7 +100,12 @@ fi
 mkdir -p "$HOME/bin"
 cat > "$HOME/bin/void" << EOF
 #!/bin/sh
-python3 "$INSTALL_DIR/game/void_launcher.py" "\$@"
+if [ "\$1" = "doctor" ]; then
+  shift
+  python3 "$INSTALL_DIR/game/void_doctor.py" "\$@"
+else
+  python3 "$INSTALL_DIR/game/void_launcher.py" "\$@"
+fi
 EOF
 chmod +x "$HOME/bin/void"
 

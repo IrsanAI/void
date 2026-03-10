@@ -74,7 +74,12 @@ param([Parameter(ValueFromRemainingArguments=`$true)] [string[]]`$Args)
 `$py = (Get-Command python -ErrorAction SilentlyContinue)
 if (-not `$py) { `$py = (Get-Command python3 -ErrorAction SilentlyContinue) }
 if (-not `$py) { Write-Host 'Python fehlt.' -ForegroundColor Red; exit 1 }
-& `$py.Source "$InstallDir\game\void_launcher.py" @Args
+if (`$Args.Length -gt 0 -and `$Args[0] -eq "doctor") {
+  if (`$Args.Length -gt 1) { `$rest = `$Args[1..(`$Args.Length-1)] } else { `$rest = @() }
+  & `$py.Source "$InstallDir\game\void_doctor.py" @rest
+} else {
+  & `$py.Source "$InstallDir\game\void_launcher.py" @Args
+}
 "@ | Set-Content -Path $ShimPath -Encoding UTF8
 
 $profileLine = "`$env:PATH = `"$BinDir;`$env:PATH`""

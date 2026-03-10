@@ -46,7 +46,7 @@
 - [x] iOS-Installer robuster (iSH/a-Shell Pfad + `~/bin/void`).
 - [x] Termux-Installer mit PATH-`void`-Befehl.
 - [x] Installer-Selftest vorhanden (`install/installer_selftest.py`) und in Installer-Flows eingebunden.
-- [ ] Post-Install „doctor" Kommando (`void doctor`) für Schnell-Diagnose.
+- [x] Post-Install „doctor" Kommando (`void doctor`) für Schnell-Diagnose.
 
 ## P3 — Dev/Quality
 

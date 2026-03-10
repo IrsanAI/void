@@ -23,6 +23,7 @@ CHECK_FILES = [
     ROOT / "void_server.py",
     ROOT / "void_relay.py",
     ROOT / "void_netcheck.py",
+    ROOT / "void_doctor.py",
 ]
 
 INSTALLER_FILES = [
