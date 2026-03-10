@@ -8,44 +8,46 @@
   <title>VOID PWA Starter (PoC)</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css" />
   <style>
-    body { margin:0; background:#060608; color:#d0d0df; font-family: ui-monospace, monospace; }
-    .wrap { max-width: 980px; margin: 0 auto; padding: 16px; }
-    h1 { margin: 0 0 8px; font-size: 20px; color:#e05555; letter-spacing: .08em; }
+    :root { color-scheme: dark; }
+    body { margin:0; background:#05060a; color:#d0d0df; font-family: ui-monospace, monospace; }
+    .wrap { max-width: 1240px; margin: 0 auto; padding: 16px; }
+    h1 { margin: 0 0 8px; font-size: 22px; color:#e05555; letter-spacing: .08em; }
     p { margin: 0 0 12px; color:#8d8da6; }
-    #term-shell { border:1px solid #1f2230; border-radius:8px; padding:8px; background:#0c0d12; min-height:380px; transition: filter .12s ease; }
-    #term-shell.glitch { filter: saturate(1.4) contrast(1.15) hue-rotate(-18deg); }
+    #term-shell { border:1px solid #1f2230; border-radius:10px; padding:10px; background:#0c0d12; min-height:680px; transition: filter .12s ease, box-shadow .12s ease; box-shadow: 0 0 0 rgba(224,85,85,0); }
+    #term-shell.glitch { filter: saturate(1.5) contrast(1.18) hue-rotate(-18deg); box-shadow: 0 0 18px rgba(224,85,85,.35); }
     .controls { margin: 10px 0 14px; display:flex; gap:8px; flex-wrap: wrap; }
-    .btn { border:1px solid #303449; border-radius:6px; background:#10131c; color:#d0d0df; padding:6px 10px; cursor:pointer; }
+    .btn { border:1px solid #303449; border-radius:6px; background:#10131c; color:#d0d0df; padding:8px 12px; cursor:pointer; font-size:14px; }
     .btn:hover { border-color:#e05555; color:#ffb4b4; }
-    .hint { font-size: 12px; color:#6f7394; }
-    .touchpad { margin-top: 12px; display:grid; grid-template-columns: 52px 52px 52px; gap:8px; width:max-content; user-select:none; }
-    .dpad { height: 52px; width: 52px; }
+    .hint { font-size: 13px; color:#7c81a8; }
+    .touchpad { margin-top: 12px; display:grid; grid-template-columns: repeat(6, minmax(56px, auto)); gap:8px; width:max-content; user-select:none; }
+    .dpad { min-height: 48px; }
     .dpad.empty { visibility: hidden; }
     .status { margin-top: 8px; font-size: 12px; color: #7e92b0; font-family: ui-monospace, monospace; }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <h1>VOID PWA Starter // PoC</h1>
-    <p>xterm.js + Pyodide: interaktives 9x9-Mini-VOID mit Signalen, Paranoia, Stress-Tracking und Glitch-Effekt.</p>
+    <h1>VOID PWA Starter // Evolution PoC</h1>
+    <p>Größeres 15x15-Mini-VOID mit versteckter VOID, Scan/Ping/Listen-Aktionen, Rivalen-Score und psychologischen Layern.</p>
 
     <div class="controls">
       <button class="btn" id="boot-btn">Boot</button>
       <button class="btn" id="toggle-btn">Pause</button>
       <button class="btn" id="reset-btn">Reset</button>
     </div>
-    <div class="hint">Input: ↑ ↓ ← → oder WASD · Ziel: Signale sammeln (◈), VOID (▓) meiden.</div>
-    <div class="hint">Mobile: benutze das Touch-D-Pad unter dem Terminal.</div>
+    <div class="hint">Move: ↑ ↓ ← → oder WASD · Aktionen: E=Scan, Q=Ping, F=Listen.</div>
+    <div class="hint">Psychologie: Paranoia (versteckte VOID), Einsamkeit/Bindung (Ping), Rivalität (Leaderboard-Jagd).</div>
 
     <div id="term-shell"><div id="term"></div></div>
 
     <div class="touchpad" aria-label="Touch controls">
-      <button class="btn dpad empty" disabled>·</button>
       <button class="btn dpad" data-dir="up">↑</button>
-      <button class="btn dpad empty" disabled>·</button>
       <button class="btn dpad" data-dir="left">←</button>
       <button class="btn dpad" data-dir="down">↓</button>
       <button class="btn dpad" data-dir="right">→</button>
+      <button class="btn dpad" data-action="scan">SCAN</button>
+      <button class="btn dpad" data-action="ping">PING</button>
+      <button class="btn dpad" data-action="listen">LISTEN</button>
     </div>
     <div class="status" id="status">Status: idle</div>
   </div>
@@ -56,8 +58,10 @@
     const term = new Terminal({
       convertEol: true,
       cursorBlink: true,
-      rows: 24,
-      cols: 80,
+      rows: 42,
+      cols: 110,
+      fontSize: 18,
+      lineHeight: 1.15,
       theme: { background: '#0c0d12', foreground: '#d0d0df', cursor: '#e05555' }
     });
     term.open(document.getElementById('term'));
@@ -80,27 +84,23 @@
       if (statusEl) statusEl.textContent = `Status: ${msg}`;
     }
 
-    function sleep(ms) {
-      return new Promise((resolve) => setTimeout(resolve, ms));
-    }
+    function sleep(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
 
     function glitchPulse() {
       shell.classList.add('glitch');
-      setTimeout(() => shell.classList.remove('glitch'), 100);
+      setTimeout(() => shell.classList.remove('glitch'), 120);
     }
 
     function dangerHaptic() {
-      if (navigator.vibrate) navigator.vibrate([45, 25, 45]);
+      if (navigator.vibrate) navigator.vibrate([55, 35, 65]);
     }
 
     function queuePython(code) {
       if (!pyodide) return Promise.resolve(null);
-      pyQueue = pyQueue
-        .then(() => pyodide.runPythonAsync(code))
-        .catch((err) => {
-          term.writeln('Python queue error: ' + String(err));
-          return null;
-        });
+      pyQueue = pyQueue.then(() => pyodide.runPythonAsync(code)).catch((err) => {
+        term.writeln('Python queue error: ' + String(err));
+        return null;
+      });
       return pyQueue;
     }
 
@@ -114,11 +114,13 @@
     async function runBootSequence() {
       setStatus('booting...');
       term.writeln('[ OK ] Initializing Neural Void Network...');
-      await sleep(450);
-      term.writeln('[ OK ] Attaching terminal cortex...');
-      await sleep(450);
-      term.writeln('[ WARN ] Unauthorized consciousness detected...');
-      await sleep(550);
+      await sleep(340);
+      term.writeln('[ OK ] Uplink to fractured signal mesh...');
+      await sleep(340);
+      term.writeln('[ WARN ] Biometric instability detected...');
+      await sleep(380);
+      term.writeln('[ WARN ] VOID prefers the leader...');
+      await sleep(420);
       term.writeln('Loading Pyodide...');
     }
 
@@ -136,17 +138,30 @@
 import random
 from collections import deque
 
+GRID = 15
+MAX_ENERGY = 100
+
 tick_count = 0
-GRID = 9
-player_x, player_y = 4, 4
+player_x, player_y = GRID // 2, GRID // 2
 void_x, void_y = 1, 1
+rival_x, rival_y = GRID - 2, GRID - 2
+
 signals = []
 score = 0
-paranoia = 0
+rival_score = 0
+energy = 78
+
+paranoia = 26
+bond = 42
+rivalry_pressure = 35
 stress = 0
+
 game_over = False
-fake_signal = None
-input_deltas = deque(maxlen=6)
+reveal_turns = 0
+void_lock_turns = 0
+log_lines = deque(maxlen=4)
+input_deltas = deque(maxlen=8)
+
 
 def _spawn_signal(exclude=None):
     while True:
@@ -155,26 +170,74 @@ def _spawn_signal(exclude=None):
             continue
         return (sx, sy)
 
-def reset_state():
-    global player_x, player_y, void_x, void_y, tick_count, signals, score, paranoia, game_over, stress, fake_signal, input_deltas
-    player_x, player_y = 4, 4
-    void_x, void_y = 1, 1
-    tick_count = 0
-    score = 0
-    paranoia = 0
-    stress = 0
-    game_over = False
-    fake_signal = None
-    input_deltas = deque(maxlen=6)
-    signals = []
-    used = {(player_x, player_y), (void_x, void_y)}
-    for _ in range(3):
-        sig = _spawn_signal(used)
-        used.add(sig)
-        signals.append(sig)
 
-def _distance():
-    return abs(void_x-player_x) + abs(void_y-player_y)
+def _seed_signals(count=6):
+    global signals
+    used = {(player_x, player_y), (void_x, void_y), (rival_x, rival_y)}
+    signals = []
+    for _ in range(count):
+        s = _spawn_signal(used)
+        used.add(s)
+        signals.append(s)
+
+
+def _distance(ax, ay, bx, by):
+    return abs(ax - bx) + abs(ay - by)
+
+
+def _nearest_signal(x, y):
+    if not signals:
+        return None
+    return min(signals, key=lambda s: _distance(x, y, s[0], s[1]))
+
+
+def _collect_if_present(x, y, who):
+    global score, rival_score, signals
+    p = (x, y)
+    if p in signals:
+        signals = [s for s in signals if s != p]
+        refill_ex = set(signals) | {(player_x, player_y), (void_x, void_y), (rival_x, rival_y)}
+        signals.append(_spawn_signal(refill_ex))
+        if who == 'player':
+            score += 1
+            log_lines.append('Signal stabilisiert (+1 Score).')
+        else:
+            rival_score += 1
+            log_lines.append('Echo-Agent punktet. Leaderboard verschiebt sich.')
+
+
+def _move_toward(v, t):
+    if v < t:
+        return v + 1
+    if v > t:
+        return v - 1
+    return v
+
+
+def _drift_bond(amount):
+    global bond
+    bond = max(0, min(100, bond + amount))
+
+
+def _drift_paranoia(amount):
+    global paranoia
+    paranoia = max(0, min(100, paranoia + amount))
+
+
+def _add_energy(amount):
+    global energy
+    energy = max(0, min(MAX_ENERGY, energy + amount))
+
+
+def _consume_energy(cost):
+    global energy
+    if energy < cost:
+        log_lines.append('Nicht genug Energie: ' + str(cost) + ' benötigt.')
+        _drift_paranoia(4)
+        return False
+    energy -= cost
+    return True
+
 
 def note_input_delta(delta_ms):
     global stress
@@ -186,79 +249,223 @@ def note_input_delta(delta_ms):
         spread = max(input_deltas) - min(input_deltas)
         stress = max(0, min(100, int((spread / max(1, avg)) * 100)))
 
-def _collect_signals():
-    global score, signals
-    p = (player_x, player_y)
-    if p in signals:
-        score += 1
-        signals = [s for s in signals if s != p]
-        signals.append(_spawn_signal(set(signals) | {p, (void_x, void_y)}))
 
 def move_player(dx, dy):
     global player_x, player_y
     if game_over:
         return
+    if not _consume_energy(1):
+        return
     player_x = max(0, min(GRID-1, player_x + dx))
     player_y = max(0, min(GRID-1, player_y + dy))
-    _collect_signals()
+    _collect_if_present(player_x, player_y, 'player')
 
-def _move_toward(v, t):
-    if v < t: return v + 1
-    if v > t: return v - 1
-    return v
 
-def tick_void():
-    global void_x, void_y, tick_count, paranoia, game_over, fake_signal
+def action_scan():
+    global reveal_turns, void_lock_turns
     if game_over:
         return
+    if not _consume_energy(12):
+        return
+    reveal_turns = 3
+    void_lock_turns = max(void_lock_turns, 4)
+    _drift_paranoia(8)
+    log_lines.append('SCAN aktiv: VOID sichtbar (3 Ticks), aber dein Standort wurde exponiert.')
+
+
+def action_ping():
+    global void_lock_turns
+    if game_over:
+        return
+    if not _consume_energy(8):
+        return
+    nearest = _nearest_signal(player_x, player_y)
+    if nearest:
+        d = _distance(player_x, player_y, nearest[0], nearest[1])
+        log_lines.append('PING: nächstes Signal in Distanz ' + str(d) + '.')
+    else:
+        log_lines.append('PING: keine Signale verfügbar.')
+    _drift_bond(10)
+    _drift_paranoia(3)
+    void_lock_turns = max(void_lock_turns, 3)
+
+
+def action_listen():
+    if game_over:
+        return
+    if not _consume_energy(5):
+        return
+    d = _distance(player_x, player_y, void_x, void_y)
+    if d <= 3:
+        log_lines.append('LISTEN: kaltes Flüstern direkt neben dir...')
+    elif d <= 6:
+        log_lines.append('LISTEN: statische Echos in mittlerer Nähe.')
+    else:
+        log_lines.append('LISTEN: nur fernes Rauschen.')
+    _drift_paranoia(-6)
+
+
+def _rival_tick():
+    global rival_x, rival_y
+    target = _nearest_signal(rival_x, rival_y)
+    if not target:
+        return
+    tx, ty = target
+    if random.random() < 0.5:
+        rival_x = _move_toward(rival_x, tx)
+    else:
+        rival_y = _move_toward(rival_y, ty)
+    _collect_if_present(rival_x, rival_y, 'rival')
+
+
+def _void_target():
+    player_dist = _distance(void_x, void_y, player_x, player_y)
+    rival_dist = _distance(void_x, void_y, rival_x, rival_y)
+    player_leads = score > rival_score
+    rival_leads = rival_score > score
+
+    if void_lock_turns > 0:
+        return (player_x, player_y)
+
+    if player_leads and random.random() < 0.72:
+        return (player_x, player_y)
+    if rival_leads and random.random() < 0.72:
+        return (rival_x, rival_y)
+
+    if player_dist <= rival_dist:
+        return (player_x, player_y)
+    return (rival_x, rival_y)
+
+
+def tick_world():
+    global tick_count, void_x, void_y, reveal_turns, void_lock_turns, game_over, rivalry_pressure, paranoia
+    if game_over:
+        return
+
     tick_count += 1
+
     if tick_count % 2 == 0:
-        void_x = _move_toward(void_x, player_x)
-        void_y = _move_toward(void_y, player_y)
+        _rival_tick()
 
-    dist = _distance()
-    paranoia = max(0, min(100, 100 - dist * 12))
-    if dist == 0:
+    tx, ty = _void_target()
+    if tick_count % 2 == 0:
+        void_x = _move_toward(void_x, tx)
+        if random.random() < 0.85:
+            void_y = _move_toward(void_y, ty)
+
+    d_player = _distance(void_x, void_y, player_x, player_y)
+    d_rival = _distance(void_x, void_y, rival_x, rival_y)
+
+    if d_player == 0:
         game_over = True
+        log_lines.append('☠ VOID hat dich erreicht.')
 
-    if paranoia > 85 and tick_count % 5 == 0:
-        fake_signal = _spawn_signal({(player_x, player_y), (void_x, void_y)})
-    elif paranoia < 70:
-        fake_signal = None
+    if d_rival == 0:
+        log_lines.append('VOID hat Echo-Agent ausgelöscht. Jagd auf dich intensiviert.')
+        global rival_x, rival_y
+        rival_x, rival_y = GRID - 2, GRID - 2
+
+    rivalry_pressure = max(0, min(100, 50 + (score - rival_score) * 9))
+    paranoia = max(0, min(100, 100 - d_player * 7 + stress // 5 + (10 if void_lock_turns > 0 else 0)))
+
+    _add_energy(2)
+    _drift_bond(-1)
+
+    if reveal_turns > 0:
+        reveal_turns -= 1
+    if void_lock_turns > 0:
+        void_lock_turns -= 1
+
+
+def _render_cell(x, y):
+    # Größere Optik: doppelte Breite
+    if x == player_x and y == player_y:
+        return '◉ '
+    if x == rival_x and y == rival_y:
+        return '◆ '
+    if reveal_turns > 0 and x == void_x and y == void_y:
+        return '▓ '
+    if (x, y) in signals:
+        return '◈ '
+    return '· '
+
+
+def _emotion_line():
+    p = 'Paranoia: ' + str(paranoia) + '%'
+    b = 'Bindung: ' + str(bond) + '%'
+    r = 'Rivalität: ' + str(rivalry_pressure) + '%'
+    return p + '   |   ' + b + '   |   ' + r
+
 
 def frame():
     rows = []
     rows.append('VOID MINI LOOP // tick=' + str(tick_count))
-    rows.append('Score: ' + str(score) + '   Paranoia: ' + str(paranoia) + '%' + '   Stress: ' + str(stress) + '%')
+    rows.append('Score YOU/ECHO: ' + str(score) + ' / ' + str(rival_score) + '    Energy: ' + str(energy) + '/' + str(MAX_ENERGY))
+    rows.append(_emotion_line())
+    rows.append('Kontrollen: Move(WASD/Arrows) | E=Scan | Q=Ping | F=Listen')
+    rows.append('Legend: ◉ du  ◆ echo-agent  ◈ signal  ▓ VOID(nur mit Scan sichtbar)')
     rows.append('')
+
+    border = '+' + '--' * GRID + '+'
+    rows.append(border)
     for y in range(GRID):
-        line = []
-        for x in range(GRID):
-            if x == player_x and y == player_y:
-                line.append('◉')
-            elif x == void_x and y == void_y:
-                line.append('▓')
-            elif (x, y) in signals:
-                line.append('◈')
-            elif fake_signal and (x, y) == fake_signal:
-                line.append('?')
-            else:
-                line.append('·')
-        rows.append(''.join(line))
+        line = ''.join(_render_cell(x, y) for x in range(GRID))
+        rows.append('|' + line + '|')
+    rows.append(border)
+
+    d = _distance(player_x, player_y, void_x, void_y)
     rows.append('')
-    dist = _distance()
-    rows.append('Distance to VOID: ' + str(dist))
-    if dist <= 2:
-        rows.append('⚠ PARANOIA SPIKE ⚠')
-    if fake_signal:
-        rows.append('⚠ Distortion detected: ghost signal appears')
+    rows.append('Entfernung zur VOID (geschätzt): ' + str(d) + ('  [SCAN aktiv]' if reveal_turns > 0 else '  [unsichtbar]'))
+    if void_lock_turns > 0:
+        rows.append('⚠ Deine letzten Aktionen haben dich verraten: VOID-Lock ' + str(void_lock_turns) + ' Tick(s).')
+    if d <= 2:
+        rows.append('⚠ PARANOIA-SPIKE: kalte Nähe erkannt.')
     if game_over:
-        rows.append('☠ VOID captured you — press Reset')
-    return '\\n'.join(rows)
+        rows.append('☠ GAME OVER — Reset drücken.')
+
+    rows.append('')
+    rows.append('Overlay:')
+    if log_lines:
+        for ln in list(log_lines):
+            rows.append('  - ' + ln)
+    else:
+        rows.append('  - Stille. Nur statisches Rauschen...')
+
+    return '\n'.join(rows)
+
 
 def step():
-    tick_void()
+    tick_world()
     return frame()
+
+
+def reset_state():
+    global tick_count, player_x, player_y, void_x, void_y, rival_x, rival_y
+    global score, rival_score, energy, paranoia, bond, rivalry_pressure
+    global stress, game_over, reveal_turns, void_lock_turns, log_lines, input_deltas
+
+    tick_count = 0
+    player_x, player_y = GRID // 2, GRID // 2
+    void_x, void_y = 1, 1
+    rival_x, rival_y = GRID - 2, GRID - 2
+
+    score = 0
+    rival_score = 0
+    energy = 78
+    paranoia = 26
+    bond = 42
+    rivalry_pressure = 35
+    stress = 0
+
+    game_over = False
+    reveal_turns = 0
+    void_lock_turns = 0
+    log_lines = deque(maxlen=4)
+    input_deltas = deque(maxlen=8)
+
+    _seed_signals(6)
+    log_lines.append('Sitzung initialisiert. VOID bleibt unsichtbar bis SCAN.')
+
 
 reset_state()
 `);
@@ -279,6 +486,7 @@ reset_state()
         if (!out) return;
         term.write('\x1b[2J\x1b[H');
         term.write(String(out).replace(/\n/g, '\r\n'));
+
         const danger = await queuePython('abs(void_x-player_x) + abs(void_y-player_y) <= 2');
         if (danger) {
           glitchPulse();
@@ -289,16 +497,23 @@ reset_state()
 
     async function move(dx, dy) {
       if (!pyodide || !running) return;
-
       const now = Date.now();
       if (lastInputTs !== null) {
         const delta = now - lastInputTs;
         await queuePython(`note_input_delta(${delta})`);
       }
       lastInputTs = now;
-
       await queuePython(`move_player(${dx}, ${dy})`);
       await renderNow();
+    }
+
+    async function action(name) {
+      if (!pyodide || !running) return;
+      if (name === 'scan') await queuePython('action_scan()');
+      if (name === 'ping') await queuePython('action_ping()');
+      if (name === 'listen') await queuePython('action_listen()');
+      await renderNow();
+      glitchPulse();
     }
 
     function handleDirection(dir) {
@@ -315,14 +530,19 @@ reset_state()
         boot().catch(() => {});
         return;
       }
-      if (['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d'].includes(key)) {
+
+      if (['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d','q','e','f'].includes(key)) {
         e.preventDefault();
         term.focus();
       }
+
       if (key === 'arrowup' || key === 'w') handleDirection('up');
       if (key === 'arrowdown' || key === 's') handleDirection('down');
       if (key === 'arrowleft' || key === 'a') handleDirection('left');
       if (key === 'arrowright' || key === 'd') handleDirection('right');
+      if (key === 'e') action('scan');
+      if (key === 'q') action('ping');
+      if (key === 'f') action('listen');
     }, { capture: true });
 
     document.querySelectorAll('[data-dir]').forEach((btn) => {
@@ -331,6 +551,15 @@ reset_state()
       btn.addEventListener('touchstart', (ev) => {
         ev.preventDefault();
         handleDirection(dir);
+      }, { passive: false });
+    });
+
+    document.querySelectorAll('[data-action]').forEach((btn) => {
+      const name = btn.getAttribute('data-action');
+      btn.addEventListener('click', () => action(name));
+      btn.addEventListener('touchstart', (ev) => {
+        ev.preventDefault();
+        action(name);
       }, { passive: false });
     });
 
@@ -356,10 +585,9 @@ reset_state()
     });
 
     window.addEventListener('offline', () => {
-      term.writeln('OFFLINE MODE: Niemand kann dich hören. Nur wir beide.');
+      term.writeln('OFFLINE MODE: Kein Netz. Niemand kann dich hören. Nur wir beide.');
       setStatus('offline');
     });
-
 
     window.addEventListener('load', () => {
       if (!autoBootStarted) {
@@ -371,6 +599,7 @@ reset_state()
         });
       }
     });
+
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js').catch(() => {});
