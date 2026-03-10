@@ -1,0 +1,24 @@
+{
+  "name": "VOID \u2014 Terminal Survival",
+  "short_name": "VOID",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#060608",
+  "theme_color": "#0c0d12",
+  "description": "Psychological terminal survival with browser-based mini gameplay PoC.",
+  "icons": [
+    {
+      "src": "./assets/void-icon.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/void-icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
