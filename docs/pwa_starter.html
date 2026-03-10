@@ -18,6 +18,17 @@
     .btn { border:1px solid #303449; border-radius:6px; background:#10131c; color:#d0d0df; padding:6px 10px; cursor:pointer; }
     .btn:hover { border-color:#e05555; color:#ffb4b4; }
     .hint { font-size: 12px; color:#6f7394; }
+    .touchpad {
+      margin-top: 12px;
+      display: grid;
+      grid-template-columns: 52px 52px 52px;
+      gap: 8px;
+      width: max-content;
+      user-select: none;
+    }
+    .dpad { height: 52px; width: 52px; }
+    .dpad.empty { visibility: hidden; }
+    .status { margin-top: 8px; font-size: 12px; color: #7e92b0; font-family: ui-monospace, monospace; }
   </style>
 </head>
 <body>
@@ -31,8 +42,19 @@
       <button class="btn" id="reset-btn">Reset</button>
     </div>
     <div class="hint">Input: ↑ ↓ ← → oder WASD · Ziel: Signale sammeln (◈), VOID (▓) meiden.</div>
+    <div class="hint">Mobile: benutze das Touch-D-Pad unter dem Terminal.</div>
 
     <div id="term-shell"><div id="term"></div></div>
+
+    <div class="touchpad" aria-label="Touch controls">
+      <button class="btn dpad empty" disabled>·</button>
+      <button class="btn dpad" data-dir="up">↑</button>
+      <button class="btn dpad empty" disabled>·</button>
+      <button class="btn dpad" data-dir="left">←</button>
+      <button class="btn dpad" data-dir="down">↓</button>
+      <button class="btn dpad" data-dir="right">→</button>
+    </div>
+    <div class="status" id="status">Status: idle</div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.js"></script>
@@ -50,16 +72,41 @@
     let pyodide = null;
     let running = false;
     let loopId = null;
+    let pyQueue = Promise.resolve();
 
     const shell = document.getElementById('term-shell');
+    const statusEl = document.getElementById('status');
+
+    function setStatus(msg) {
+      if (statusEl) statusEl.textContent = `Status: ${msg}`;
+    }
 
     function glitchPulse() {
       shell.classList.add('glitch');
       setTimeout(() => shell.classList.remove('glitch'), 80);
     }
 
+    function queuePython(code) {
+      if (!pyodide) return Promise.resolve(null);
+      pyQueue = pyQueue
+        .then(() => pyodide.runPythonAsync(code))
+        .catch((err) => {
+          term.writeln('Python queue error: ' + String(err));
+          return null;
+        });
+      return pyQueue;
+    }
+
+    async function renderNow() {
+      const out = await queuePython('frame()');
+      if (!out) return;
+      term.write('\x1b[2J\x1b[H');
+      term.write(String(out).replace(/\n/g, '\r\n'));
+    }
+
     async function boot() {
       if (pyodide) return;
+      setStatus('booting...');
       term.writeln('Booting VOID PWA prototype...');
       term.writeln('Loading Pyodide...');
       pyodide = await loadPyodide();
@@ -69,6 +116,7 @@
 
       await pyodide.runPythonAsync(`
 import random
+
 tick_count = 0
 GRID = 9
 player_x, player_y = 4, 4
@@ -173,52 +221,78 @@ reset_state()
 
       running = true;
       startLoop();
+      await renderNow();
+      setStatus('running');
     }
 
     function startLoop() {
       if (loopId) clearInterval(loopId);
       loopId = setInterval(async () => {
         if (!running || !pyodide) return;
-        const out = await pyodide.runPythonAsync('step()');
+        const out = await queuePython('step()');
+        if (!out) return;
         term.write('\x1b[2J\x1b[H');
-        term.write(out.replace(/\n/g, '\r\n'));
-        const danger = await pyodide.runPythonAsync('abs(void_x-player_x) + abs(void_y-player_y) <= 2');
+        term.write(String(out).replace(/\n/g, '\r\n'));
+        const danger = await queuePython('abs(void_x-player_x) + abs(void_y-player_y) <= 2');
         if (danger) glitchPulse();
       }, 550);
     }
 
     async function move(dx, dy) {
-      if (!pyodide) return;
-      await pyodide.runPythonAsync(`move_player(${dx}, ${dy})`);
+      if (!pyodide || !running) return;
+      await queuePython(`move_player(${dx}, ${dy})`);
+      await renderNow();
+    }
+
+    function handleDirection(dir) {
+      if (dir === 'up') move(0, -1);
+      if (dir === 'down') move(0, 1);
+      if (dir === 'left') move(-1, 0);
+      if (dir === 'right') move(1, 0);
     }
 
     document.addEventListener('keydown', (e) => {
       const key = e.key.toLowerCase();
       if (['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d'].includes(key)) e.preventDefault();
-      if (key === 'arrowup' || key === 'w') move(0, -1);
-      if (key === 'arrowdown' || key === 's') move(0, 1);
-      if (key === 'arrowleft' || key === 'a') move(-1, 0);
-      if (key === 'arrowright' || key === 'd') move(1, 0);
+      if (key === 'arrowup' || key === 'w') handleDirection('up');
+      if (key === 'arrowdown' || key === 's') handleDirection('down');
+      if (key === 'arrowleft' || key === 'a') handleDirection('left');
+      if (key === 'arrowright' || key === 'd') handleDirection('right');
     });
 
-    document.getElementById('boot-btn').addEventListener('click', () => boot().catch(err => term.writeln('Boot failed: ' + String(err))));
+    document.querySelectorAll('[data-dir]').forEach((btn) => {
+      const dir = btn.getAttribute('data-dir');
+      btn.addEventListener('click', () => handleDirection(dir));
+      btn.addEventListener('touchstart', (ev) => {
+        ev.preventDefault();
+        handleDirection(dir);
+      }, { passive: false });
+    });
+
+    document.getElementById('boot-btn').addEventListener('click', () => boot().catch(err => {
+      term.writeln('Boot failed: ' + String(err));
+      setStatus('boot failed');
+    }));
+
     document.getElementById('toggle-btn').addEventListener('click', () => {
       running = !running;
       document.getElementById('toggle-btn').textContent = running ? 'Pause' : 'Resume';
+      setStatus(running ? 'running' : 'paused');
     });
+
     document.getElementById('reset-btn').addEventListener('click', async () => {
       if (!pyodide) return;
-      await pyodide.runPythonAsync('reset_state()');
+      await queuePython('reset_state()');
+      await renderNow();
       glitchPulse();
+      setStatus('running');
     });
-  
 
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js').catch(() => {});
-    });
-  }
-
-</script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+    }
+  </script>
 </body>
 </html>

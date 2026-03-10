@@ -106,7 +106,7 @@ Deine Idee einer browserbasierten VOID-Version ist technisch sinnvoll und als Po
 - Starter-Prototyp: [`docs/pwa_starter.html`](./docs/pwa_starter.html)
 - PWA-Basis: [`docs/manifest.webmanifest`](./docs/manifest.webmanifest) + [`docs/sw.js`](./docs/sw.js)
 
-> Ziel des Starters: xterm.js + Pyodide laden und einen Python-Heartbeat im Browser-Terminal ausführen.
+> Ziel des Starters: xterm.js + Pyodide laden, interaktives Mini-Grid spielen (WASD/Pfeile) und mobil via Touch-D-Pad steuern.
 
 ## 🚀 Starten
 

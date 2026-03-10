@@ -47,3 +47,5 @@ Wenn dieses Fundament stabil läuft, kann die nächste Stufe folgen:
 - Damit ist der "Heartbeat"-Schritt überschritten; nächster Schritt ist die Portierung echter Game-State-Strukturen aus `void_solo_enhanced.py`.
 
 - Zusätzlich wurden `docs/manifest.webmanifest` und `docs/sw.js` ergänzt (PWA-Grundlagen: installierbar + Cache-Basis).
+
+- Stabilisierungsschritt: JS→Pyodide Aufrufe laufen nun seriell über eine Input-Queue, um Race-Conditions bei Bewegung/Loop zu vermeiden; zusätzlich Touch-D-Pad für Mobile.
